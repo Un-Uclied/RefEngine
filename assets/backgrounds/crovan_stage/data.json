@@ -1,0 +1,61 @@
+{
+    "default_zoom": 0.5,
+    "backgrounds": [
+        {
+            "path": "assets/backgrounds/crovan_stage/landscape.png",
+            "position": [
+                500,
+                500
+            ],
+            "scale": 3,
+			"screen_space": false
+        },
+		{
+            "path": "assets/backgrounds/crovan_stage/flame.gif",
+            "position": [
+                0, 0
+            ],
+            "scale": "full_screen",
+            "speed": 1,
+			"screen_space": true
+        },
+		{
+            "path": "assets/backgrounds/crovan_stage/noise.gif",
+            "position": [
+                0, 0
+            ],
+            "scale": "full_screen",
+            "speed": 1,
+			"screen_space": true
+        },
+		{
+            "path": "assets/backgrounds/crovan_stage/shader.png",
+            "position": [
+                0, 0
+            ],
+            "scale": "full_screen",
+			"screen_space": true
+        }
+    ],
+    "player": {
+        "position": [
+            1400,
+            300
+        ],
+        "scale": 1
+    },
+    "opponent": {
+        "position": [
+            400,
+            750
+        ],
+        "scale": 1
+    },
+    "sub_character": {
+        "position": [
+            700,
+            300
+        ],
+        "scale": 1
+    }
+}

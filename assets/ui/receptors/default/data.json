@@ -1,0 +1,102 @@
+{
+    "animations": {
+        "left": {
+            "idle": "assets/ui/receptors/default/left.gif",
+            "press": "assets/ui/receptors/default/left_press.gif",
+            "confirm": "assets/ui/receptors/default/left_confirm.gif"
+        },
+        "down": {
+            "idle": "assets/ui/receptors/default/down.gif",
+            "press": "assets/ui/receptors/default/down_press.gif",
+            "confirm": "assets/ui/receptors/default/down_confirm.gif"
+        },
+        "up": {
+            "idle": "assets/ui/receptors/default/up.gif",
+            "press": "assets/ui/receptors/default/up_press.gif",
+            "confirm": "assets/ui/receptors/default/up_confirm.gif"
+        },
+        "right": {
+            "idle": "assets/ui/receptors/default/right.gif",
+            "press": "assets/ui/receptors/default/right_press.gif",
+            "confirm": "assets/ui/receptors/default/right_confirm.gif"
+        }
+    },
+    "settings": {
+        "player": {
+            "left": {
+                "position": [
+                    850,
+                    620
+                ],
+                "speed": 1,
+                "scale": 0.65,
+                "alpha": 255
+            },
+            "down": {
+                "position": [
+                    950,
+                    620
+                ],
+                "speed": 1,
+                "scale": 0.65,
+                "alpha": 255
+            },
+            "up": {
+                "position": [
+                    1050,
+                    620
+                ],
+                "speed": 1,
+                "scale": 0.65,
+                "alpha": 255
+            },
+            "right": {
+                "position": [
+                    1150,
+                    620
+                ],
+                "speed": 1,
+                "scale": 0.65,
+                "alpha": 255
+            }
+        },
+        "opponent": {
+            "left": {
+                "position": [
+                    130,
+                    620
+                ],
+                "speed": 1,
+                "scale": 0.65,
+                "alpha": 255
+            },
+            "down": {
+                "position": [
+                    230,
+                    620
+                ],
+                "speed": 1,
+                "scale": 0.65,
+                "alpha": 255
+            },
+            "up": {
+                "position": [
+                    330,
+                    620
+                ],
+                "speed": 1,
+                "scale": 0.65,
+                "alpha": 255
+            },
+            "right": {
+                "position": [
+                    430,
+                    620
+                ],
+                "speed": 1,
+                "scale": 0.65,
+                "alpha": 255
+            }
+        }
+    }
+}

@@ -1,0 +1,57 @@
+{
+    "name": "null",
+    "is_player_character": true,
+    "description": "A null character used for testing.",
+    "camera_offset": [
+        0,
+        0
+    ],
+    "scale": 0.5,
+    "animations": {
+        "idle": {
+            "path": "assets/characters/null/idle.gif",
+            "animation_speed": 1,
+            "loop": false,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_left": {
+            "path": "assets/characters/null/sing_left.gif",
+            "animation_speed": 1,
+            "loop": false,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_right": {
+            "path": "assets/characters/null/sing_right.gif",
+            "animation_speed": 1,
+            "loop": false,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_down": {
+            "path": "assets/characters/null/sing_down.gif",
+            "animation_speed": 1,
+            "loop": false,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_up": {
+            "path": "assets/characters/null/sing_up.gif",
+            "animation_speed": 1,
+            "loop": false,
+            "offset": [
+                0,
+                0
+            ]
+        }
+    }
+}

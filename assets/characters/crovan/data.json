@@ -1,0 +1,84 @@
+{
+    "name": "crovan",
+    "is_player_character": false,
+    "description": "Crovan character (아직 애니메이션 안 바꿈)",
+    "camera_offset": [
+        0,
+        0
+    ],
+    "scale" : 0.5,
+    "animations": {
+        "idle": {
+            "path": "assets/characters/crovan/idle.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_left": {
+            "path": "assets/characters/crovan/sing_left.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_right": {
+            "path": "assets/characters/crovan/sing_right.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_down": {
+            "path": "assets/characters/crovan/sing_down.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_up": {
+            "path": "assets/characters/crovan/sing_up.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_left_alt": {
+            "path": "assets/characters/crovan/sing_left_alt.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_right_alt": {
+            "path": "assets/characters/crovan/sing_right_alt.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_down_alt": {
+            "path": "assets/characters/crovan/sing_down_alt.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        "sing_up_alt": {
+            "path": "assets/characters/crovan/sing_up_alt.gif",
+            "animation_speed": 1,
+            "offset": [
+                0,
+                0
+            ]
+        }
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "sick": 1000,
+    "good": 500,
+    "bad": 200,
+    "shit": 50,
+    "miss": -250,
+    "bad_note_hit": -250,
+    "hold_break": -500
+}
