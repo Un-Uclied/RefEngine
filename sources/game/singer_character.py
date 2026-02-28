@@ -2,6 +2,8 @@ import arcade
 import json
 from sources.utils import *
 
+IDLE_DELAY = .1
+
 class SingerCharacterManager:
     def __init__(self, song_data, background_data):
         self.player     = SingerCharacter(song_data["player_name"],
@@ -22,6 +24,8 @@ class SingerCharacterManager:
 
         self._should_player_go_idle = True
         self._should_opponent_go_idle = True
+        self._player_idle_timer = 0.0
+        self._opponent_idle_timer = 0.0
 
         bus.subscribe("beat", self._beat)
         bus.subscribe("player_pressed", self._note_pressed)
@@ -51,27 +55,36 @@ class SingerCharacterManager:
             
     def _player_released(self, direction_index):
         self._should_player_go_idle = True
+        self._player_idle_timer = IDLE_DELAY
     
     def _opponent_released(self, direction_index):
         self._should_opponent_go_idle = True
+        self._opponent_idle_timer = IDLE_DELAY
 
     def _beat(self, beat: int, time: float):
-        self._advance_sprite(self.player, self._should_player_go_idle)
-        self._advance_sprite(self.opponent, self._should_opponent_go_idle)
-        if self.sub_character is not None:
-            self._advance_sprite(self.sub_character, True)
+        self._advance_sprite(self.player, self._should_player_go_idle, self._player_idle_timer)
+        self._advance_sprite(self.opponent, self._should_opponent_go_idle, self._opponent_idle_timer)
 
-    def _advance_sprite(self, sprite, should_go_idle: bool):
+        if self.sub_character is not None:
+            self._advance_sprite(self.sub_character, True, 0)
+
+    def _advance_sprite(self, sprite, should_go_idle: bool, timer: float):
         is_animation_end = sprite._current_keyframe_index >= sprite.animation.num_frames - 1
         if not is_animation_end:
             return
 
         if should_go_idle:
-            sprite.play_animation("idle")
+            if timer <= 0:
+                sprite.play_animation("idle")
         else:
             sprite.play_animation(sprite.current_animation_name)
 
     def update(self, delta_time) : 
+        if self._player_idle_timer > 0:
+            self._player_idle_timer -= delta_time
+        if self._opponent_idle_timer > 0:
+            self._opponent_idle_timer -= delta_time
+
         self._character_spritelist.update(delta_time)
         self._character_spritelist.update_animation(delta_time)
 

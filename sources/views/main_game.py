@@ -30,6 +30,7 @@ class MainGameView(arcade.View):
         self.score_mgr      = ScoreManager(self._config_data)
         self.camera_mgr     = CameraManager(self._song_data, self._background_data)
         self.background_mgr = BackgroundManager(self._background_data)
+        self.game_interface_mgr = GameInterfaceManager(self._song_data)
 
         self.song_mgr.play()
 
@@ -40,6 +41,7 @@ class MainGameView(arcade.View):
         self.receptor_mgr.on_hide_view()
         self.score_mgr.on_hide_view()
         self.camera_mgr.on_hide_view()
+        self.game_interface_mgr.on_hide_view()
     
         return super().on_hide_view()
 
@@ -50,6 +52,7 @@ class MainGameView(arcade.View):
         self.background_mgr.update(delta_time)
         self.character_mgr.update(delta_time)
         self.camera_mgr.update(delta_time)
+        self.game_interface_mgr.update(delta_time)
 
     def on_draw(self):
         self.clear()
@@ -58,29 +61,29 @@ class MainGameView(arcade.View):
             self.character_mgr.draw()
         with self.camera_mgr.camera_ui.activate():
             self.background_mgr.draw_camera()
-            self.score_mgr.draw()
+            self.game_interface_mgr.draw()
         with self.camera_mgr.camera_note.activate():
             self.receptor_mgr.draw()
             self.note_mgr.draw()
         
-        arcade.draw_text(f"FPS : {math.floor(arcade.get_fps())}", 50, arcade.get_window().height - 50, arcade.color.GREEN, 24, bold=True)
+        arcade.draw_text(f"FPS : {math.floor(arcade.get_fps())}", 20, arcade.get_window().height - 20, arcade.color.GREEN, 24, bold=False)
 
     def on_key_press(self, key, modifiers):
         keys_arrow = {arcade.key.LEFT: 0, arcade.key.DOWN: 1, arcade.key.UP: 2, arcade.key.RIGHT: 3}
         keys_lane = {arcade.key.D: 0, arcade.key.F: 1, arcade.key.J: 2, arcade.key.K: 3}
         if key in keys_arrow:
             idx = keys_arrow[key]
-            self.note_mgr.player_input_pressed(idx)
+            self.note_mgr.on_key_press(idx)
         if key in keys_lane:
             idx = keys_lane[key]
-            self.note_mgr.player_input_pressed(idx)
+            self.note_mgr.on_key_press(idx)
 
     def on_key_release(self, key, modifiers):
         keys_arrow = {arcade.key.LEFT: 0, arcade.key.DOWN: 1, arcade.key.UP: 2, arcade.key.RIGHT: 3}
         keys_lane = {arcade.key.D: 0, arcade.key.F: 1, arcade.key.J: 2, arcade.key.K: 3}
         if key in keys_arrow:
             idx = keys_arrow[key]
-            self.note_mgr.player_released(idx)
+            self.note_mgr.on_key_release(idx)
         if key in keys_lane:
             idx = keys_lane[key]
-            self.note_mgr.player_released(idx)
+            self.note_mgr.on_key_release(idx)

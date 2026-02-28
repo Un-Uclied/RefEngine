@@ -3,7 +3,7 @@ from sources.views import *
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
-WINDOW_NAME = "My Arcade Game"
+WINDOW_NAME = "Friday Night Funkin : RefEngine"
 FULLSCREEN = False
 ANTIALIASING = True
 UPDATE_RATE = 1/240
@@ -25,10 +25,12 @@ class Application:
         )
         arcade.enable_timings()
 
-        # Initialize the stage
+        arcade.load_font("assets/fonts/NanumBarunGothic-YetHangul.ttf")
+        arcade.load_font("assets/fonts/MBC 1961 M.ttf")
+        arcade.load_font("assets/fonts/Paperlogy-8ExtraBold.ttf")
+
         self.stage_view = MainGameView("singularity")
         
-        # Show the stage
         self.window.show_view(self.stage_view)
         arcade.run()
 

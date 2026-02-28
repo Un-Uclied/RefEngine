@@ -2,9 +2,11 @@ import json
 import math
 import pathlib
 from typing import Dict, List, Tuple, Any, Optional
-
 import arcade
-from sources.utils.event_bus import bus
+from sources.utils.event_bus import *
+
+REMOVE_DELAY_MS = 200
+MISS_ALPHA = 50
 
 def calculate_line_bounds(
     point_a: Tuple[float, float], 
@@ -58,9 +60,6 @@ class HoldSegment(arcade.Sprite):
         self.center_y = self.parent_note.center_y + math.sin(direction_radian) * offset
 
 class Note(arcade.TextureAnimationSprite):
-    REMOVE_DELAY_MS = 200
-    MISS_ALPHA = 50
-
     def __init__(
         self, 
         direction_index: int,
@@ -106,7 +105,7 @@ class Note(arcade.TextureAnimationSprite):
     def should_despawn(self) -> bool:
         from sources.views import MainGameView
         song_mgr = MainGameView.current.song_mgr
-        return song_mgr.song_ms >= self.strum_time + self.sustain_length + self.REMOVE_DELAY_MS
+        return song_mgr.song_ms >= self.strum_time + self.sustain_length + REMOVE_DELAY_MS
 
     @property
     def is_opponent(self) -> bool:
@@ -120,9 +119,9 @@ class Note(arcade.TextureAnimationSprite):
         return super().update(delta_time)
 
     def set_visual_miss(self):
-        self.alpha = self.MISS_ALPHA
+        self.alpha = MISS_ALPHA
         for segment in self._segments:
-            segment.alpha = self.MISS_ALPHA
+            segment.alpha = MISS_ALPHA
 
     def _update_position(self):
         from sources.views import MainGameView
@@ -300,14 +299,14 @@ class NoteManager:
                 else:
                     sustain_list.draw()
 
-    def player_input_pressed(self, direction_index: int):
+    def on_key_press(self, direction_index: int):
         from sources.views import MainGameView
         song_mgr = MainGameView.current.song_mgr
         
         note = self._process_hit(direction_index, song_mgr.song_ms)
         bus.publish("player_pressed", direction_index=direction_index, note=note)
 
-    def player_released(self, direction_index: int):
+    def on_key_release(self, direction_index: int):
         from sources.views import MainGameView
         song_mgr = MainGameView.current.song_mgr
 

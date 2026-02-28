@@ -5,5 +5,8 @@
     "shit": 50,
     "miss": -250,
     "bad_note_hit": -250,
-    "hold_break": -500
+    "hold_break": -500,
+
+    "hit_health" : 2,
+    "miss_health" : -2
 }

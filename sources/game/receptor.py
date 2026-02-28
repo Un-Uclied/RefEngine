@@ -4,6 +4,8 @@ import time
 import arcade
 from sources.utils import *
 
+PRESS_MIN_DISPLAY_MS = 80
+
 class ReceptorManager:
     def __init__(self, receptor_name : str):
         with open(f"assets/ui/receptors/{receptor_name}/data.json", 'r') as f:
@@ -82,8 +84,6 @@ class ReceptorManager:
         self.receptors.draw()
         
 class Receptor(arcade.Sprite):
-    PRESS_MIN_DISPLAY_MS = 80
-
     def __init__(self, direction_index, loaded_settings, loaded_animation):
         super().__init__()
         self.direction_index = direction_index
@@ -121,7 +121,7 @@ class Receptor(arcade.Sprite):
     def update_idle_transition(self):
         if self._pending_idle and self._press_start_time is not None:
             elapsed = time.time() * 1000 - self._press_start_time
-            if elapsed >= self.PRESS_MIN_DISPLAY_MS:
+            if elapsed >= PRESS_MIN_DISPLAY_MS:
                 self.set_animation("idle")
 
     def update_from_song_time(self, song_ms: float):
