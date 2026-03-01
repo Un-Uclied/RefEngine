@@ -1,4 +1,5 @@
 import math
+import random
 
 import arcade
 import json
@@ -25,7 +26,7 @@ class MainGameView(arcade.View):
         
         self.character_mgr  = SingerCharacterManager(self._song_data, self._background_data)
         self.receptor_mgr   = ReceptorManager(self._song_data["receptor_name"])
-        self.note_mgr       = NoteManager(self._song_data)
+        self.note_mgr       = NoteManager(self._song_data, is_bot_play=True)
         self.song_mgr       = SongManager(self._song_data)
         self.score_mgr      = ScoreManager(self._config_data)
         self.camera_mgr     = CameraManager(self._song_data, self._background_data)
@@ -33,6 +34,8 @@ class MainGameView(arcade.View):
         self.game_interface_mgr = GameInterfaceManager(self._song_data)
 
         self.song_mgr.play()
+
+        self._start_pos = arcade.get_window().get_location()
 
         return super().on_show_view()
     
@@ -54,6 +57,11 @@ class MainGameView(arcade.View):
         self.camera_mgr.update(delta_time)
         self.game_interface_mgr.update(delta_time)
 
+        arcade.get_window().set_location(int(self._start_pos[0] + math.cos(self.song_mgr.song_ms / 1000 * 5) * 100), int(self._start_pos[1] + math.sin(self.song_mgr.song_ms / 1000 * 5) * 100))
+        for receptor in self.receptor_mgr.receptors:
+            receptor.position = (receptor.spawn_x + math.cos(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15, receptor.spawn_y + math.sin(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15)
+            receptor.angle = math.sin(self.song_mgr.song_ms / 1000 * 5 + receptor.direction_index) * 15 + math.cos(self.song_mgr.song_ms / 1000 * 3 + receptor.direction_index) * 10
+
     def on_draw(self):
         self.clear()
         with self.camera_mgr.camera_world.activate():
@@ -69,6 +77,8 @@ class MainGameView(arcade.View):
         arcade.draw_text(f"FPS : {math.floor(arcade.get_fps())}", 20, arcade.get_window().height - 20, arcade.color.GREEN, 24, bold=False)
 
     def on_key_press(self, key, modifiers):
+        if self.note_mgr.is_bot_play:
+            return
         keys_arrow = {arcade.key.LEFT: 0, arcade.key.DOWN: 1, arcade.key.UP: 2, arcade.key.RIGHT: 3}
         keys_lane = {arcade.key.D: 0, arcade.key.F: 1, arcade.key.J: 2, arcade.key.K: 3}
         if key in keys_arrow:
@@ -79,6 +89,8 @@ class MainGameView(arcade.View):
             self.note_mgr.on_key_press(idx)
 
     def on_key_release(self, key, modifiers):
+        if self.note_mgr.is_bot_play:
+            return
         keys_arrow = {arcade.key.LEFT: 0, arcade.key.DOWN: 1, arcade.key.UP: 2, arcade.key.RIGHT: 3}
         keys_lane = {arcade.key.D: 0, arcade.key.F: 1, arcade.key.J: 2, arcade.key.K: 3}
         if key in keys_arrow:

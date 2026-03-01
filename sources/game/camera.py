@@ -1,6 +1,10 @@
 import arcade
 from sources.utils import *
 
+BEAT_UI_CAMERA_ADD_ZOOM = 0.1
+BEAT_NOTE_CAMERA_ADD_ZOOM = 0.15
+BEAT_WORLD_CAMERA_ADD_ZOOM = 0.15
+
 class CameraManager:
     def __init__(self, song_data : dict, background_data : dict):
         self.camera_world = arcade.Camera2D()
@@ -49,10 +53,15 @@ class CameraManager:
 
         self.camera_target_position = character_mgr.player.camera_position if song_mgr.is_player_turn else character_mgr.opponent.camera_position
 
+        self.camera_ui.zoom = 1 + BEAT_UI_CAMERA_ADD_ZOOM
+        self.camera_note.zoom = 1 + BEAT_NOTE_CAMERA_ADD_ZOOM
+        self.camera_world.zoom = self._spawn_camera_world_zoom + BEAT_WORLD_CAMERA_ADD_ZOOM
+
     def update(self, delta_time):
         self.camera_world.position = self.camera_world.position.lerp(
             self._camera_target_position,
             delta_time * 5)
     
-        self.camera_world.zoom = arcade.math.lerp(self.camera_world.zoom, self._spawn_camera_world_zoom, delta_time)
-        self.camera_note.zoom = arcade.math.lerp(self.camera_note.zoom, 1, delta_time)
+        self.camera_world.zoom = min(arcade.math.lerp(self.camera_world.zoom, self._spawn_camera_world_zoom, delta_time), self._spawn_camera_world_zoom + BEAT_WORLD_CAMERA_ADD_ZOOM)
+        self.camera_note.zoom = min(arcade.math.lerp(self.camera_note.zoom, 1, delta_time), 1 + BEAT_NOTE_CAMERA_ADD_ZOOM)
+        self.camera_ui.zoom = min(arcade.math.lerp(self.camera_ui.zoom, 1, delta_time * 10), 1 + BEAT_UI_CAMERA_ADD_ZOOM)

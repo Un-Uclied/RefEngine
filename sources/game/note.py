@@ -158,7 +158,7 @@ class Note(arcade.TextureAnimationSprite):
             seg.remove_from_sprite_lists()
 
 class NoteManager:
-    def __init__(self, song_data: dict):
+    def __init__(self, song_data: dict, is_bot_play : bool):
         self._song_data = song_data
         self.pixels_per_ms = 0.45 * song_data["speed"]
         self._note_assets = {}
@@ -176,6 +176,8 @@ class NoteManager:
         with open("assets/config/judgements.json", 'r') as file:
             self._judgement_windows = json.load(file)
         self.hit_window_ms = max(self._judgement_windows.values())
+        
+        self.is_bot_play = is_bot_play
 
     def _load_resources(self):
         types = {"default", "alt_animation"}
@@ -259,16 +261,34 @@ class NoteManager:
         song_ms = song_mgr.song_ms
         for note in self.notes:
             if note.is_opponent:
-                # fire press event once when the note becomes active
                 if not note._pressed and song_ms >= note.strum_time:
                     note._pressed = True
                     note.is_hit = True
                     note.judgement = "auto"
                     bus.publish("opponent_pressed", direction_index=note.direction_index, note=note)
-                # fire release event once after sustain ends
                 if not note._released and song_ms > note.strum_time + note.sustain_length:
                     note._released = True
                     bus.publish("opponent_released", direction_index=note.direction_index)
+                continue
+
+    def _bot_play(self):
+        from sources.views import MainGameView
+        song_mgr = MainGameView.current.song_mgr
+
+        song_ms = song_mgr.song_ms
+        for note in self.notes:
+            if not note.is_opponent:
+                # skip penalty notes in bot play
+                if note.penalty_note:
+                    continue
+                if not note._pressed and song_ms >= note.strum_time:
+                    note._pressed = True
+                    note.is_hit = True
+                    note.judgement = "auto"
+                    bus.publish("player_pressed", direction_index=note.direction_index, note=note)
+                if not note._released and song_ms > note.strum_time + note.sustain_length:
+                    note._released = True
+                    bus.publish("player_released", direction_index=note.direction_index)
                 continue
     
     def _draw_sustains(self):
@@ -329,21 +349,20 @@ class NoteManager:
 
         self._spawn_notes()
         self._opponent_input()
+        if self.is_bot_play:
+            self._bot_play()
 
         self.notes.update(delta_time)
         self.notes.update_animation(delta_time)
         for sustain_list in self.sustains.values():
             sustain_list.update(delta_time)
 
-        # Apply visual miss for player notes in the update loop so misses
-        # always get their visual state even if no explicit input release occurs.
         song_ms = song_mgr.song_ms
         for note in list(self.notes):
             if not note.is_opponent and not note.is_hit and not note.is_miss:
                 if song_ms > note.strum_time + self.hit_window_ms:
                     note.is_miss = True
                     note.set_visual_miss()
-                    # only publish miss event if this is a must-hit note
                     if note.must_hit_note:
                         bus.publish("player_note_miss", note=note)
 

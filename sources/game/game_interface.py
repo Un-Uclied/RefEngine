@@ -52,6 +52,7 @@ class ScoreInterface:
     def __init__(self):
         self._score_text    = arcade.Text("Score : 0", 400, 25, arcade.color.WHITE, font_name="Paperlogy 8")
         self._accuracy_text = arcade.Text("Accuracy : 100%", 400, 5, arcade.color.WHITE, font_name="Paperlogy 8")
+        self._bot_play_text = arcade.Text("[ BOT PLAY ENABLED ]", arcade.get_window().width/2, arcade.get_window().height - 120, arcade.color.RED, font_name="Paperlogy 8", anchor_x="center", anchor_y="center", align="center", font_size=20)
 
         bus.subscribe("score_updated", self._score_updated)
 
@@ -60,8 +61,12 @@ class ScoreInterface:
         self._accuracy_text.text    = f"Accuracy : {math.floor(accuracy):02d}%"
 
     def draw(self):
+        from sources.views import MainGameView
+
         self._score_text.draw()
         self._accuracy_text.draw()
+        if MainGameView.current.note_mgr.is_bot_play:
+            self._bot_play_text.draw()
 
 class HealthInterface:
     def __init__(self, song_data):
