@@ -135,11 +135,11 @@ class HealthInterface:
         
         self._opponent_icon.center_x = icon_x - 40
         self._opponent_icon.center_y = self.bg.center_y
-        self._opponent_icon.scale = min(arcade.math.lerp_2d(self._opponent_icon.scale, arcade.Vec2(0.75, 0.75), delta_time * 10), 0.75)
+        self._opponent_icon.scale = min(arcade.math.lerp_2d(self._opponent_icon.scale, arcade.Vec2(0.75, 0.75), delta_time * 10), arcade.Vec2(1, 1))
         
         self._player_icon.center_x = icon_x + 40
         self._player_icon.center_y = self.bg.center_y
-        self._player_icon.scale = min(arcade.math.lerp_2d(self._player_icon.scale, arcade.Vec2(0.75, 0.75), delta_time * 10), 0.75)
+        self._player_icon.scale = min(arcade.math.lerp_2d(self._player_icon.scale, arcade.Vec2(0.75, 0.75), delta_time * 10), arcade.Vec2(1, 1))
 
     def draw(self):
         self._sprites.draw()

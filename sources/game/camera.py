@@ -25,13 +25,22 @@ class CameraManager:
         character_mgr = MainGameView.current.character_mgr
         song_mgr = MainGameView.current.song_mgr
 
+
         if direction_index < 3:
             if note is not None:
+                if character_mgr.player.current_animation_name in ["sing_left_alt", "sing_down_alt", "sing_up_alt", "sing_right_alt"]:
+                    amount = 85
+                else:
+                    amount = 50
                 self._camera_target_position = character_mgr.player.camera_position if song_mgr.is_player_turn else character_mgr.opponent.camera_position
-                self._camera_target_position += [arcade.Vec2(-50, 0), arcade.Vec2(0, -50), arcade.Vec2(0, 50), arcade.Vec2(50, 0)][direction_index % 4]
+                self._camera_target_position += [arcade.Vec2(-amount, 0), arcade.Vec2(0, -amount), arcade.Vec2(0, amount), arcade.Vec2(amount, 0)][direction_index % 4]
         else:
+            if character_mgr.opponent.current_animation_name in ["sing_left_alt", "sing_down_alt", "sing_up_alt", "sing_right_alt"]:
+                amount = 85
+            else:
+                amount = 50
             self._camera_target_position = character_mgr.player.camera_position if song_mgr.is_player_turn else character_mgr.opponent.camera_position
-            self._camera_target_position += [arcade.Vec2(-50, 0), arcade.Vec2(0, -50), arcade.Vec2(0, 50), arcade.Vec2(50, 0)][direction_index % 4]
+            self._camera_target_position += [arcade.Vec2(-amount, 0), arcade.Vec2(0, -amount), arcade.Vec2(0, amount), arcade.Vec2(amount, 0)][direction_index % 4]
         
     def _beat(self, beat, time):
         from sources.views import MainGameView

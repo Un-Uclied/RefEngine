@@ -36,6 +36,14 @@ class SongManager:
                 return sec["mustHit"]
         return False
 
+    @property
+    def current_section_data(self):
+        t = self.song_ms
+        for sec in self.sections:
+            if sec["start"] <= t < sec["end"]:
+                return sec["data"]
+        return None
+
     def update(self):
         if not self.music_playing:
             return
@@ -127,7 +135,8 @@ class SongManager:
             sections.append({
                 "start": current_time,
                 "end": current_time + length_ms,
-                "mustHit": sec["mustHitSection"]
+                "mustHit": sec["mustHitSection"],
+                "data": sec
             })
 
             current_time += length_ms

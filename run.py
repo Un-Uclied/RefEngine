@@ -29,7 +29,7 @@ class Application:
         arcade.load_font("assets/fonts/MBC 1961 M.ttf")
         arcade.load_font("assets/fonts/Paperlogy-8ExtraBold.ttf")
 
-        self.stage_view = MainGameView("singularity")
+        self.stage_view = MainGameView("endless-D")
         
         self.window.show_view(self.stage_view)
         arcade.run()

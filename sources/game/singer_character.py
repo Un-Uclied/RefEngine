@@ -43,13 +43,17 @@ class SingerCharacterManager:
     def _note_pressed(self, direction_index, note):
         if note is None:
             return
+        from sources.views import MainGameView
+
         anim = ["sing_left", "sing_down", "sing_up", "sing_right"][direction_index % 4]
-        if getattr(note, "note_type", "") == "alt_animation":
-            anim = f"{anim}_alt"
         if direction_index < 4:
+            if f"{anim}_alt" in self.player.loaded_animations and (getattr(note, "note_type", "") == "alt_animation" or MainGameView.current.song_mgr.current_section_data.get("altAnim", False)):
+                anim = f"{anim}_alt"
             self.player.play_animation(anim)
             self._should_player_go_idle = False
         if direction_index >= 4:
+            if f"{anim}_alt" in self.opponent.loaded_animations and (getattr(note, "note_type", "") == "alt_animation" or MainGameView.current.song_mgr.current_section_data.get("altAnim", False)):
+                anim = f"{anim}_alt"
             self.opponent.play_animation(anim)
             self._should_opponent_go_idle = False
             
