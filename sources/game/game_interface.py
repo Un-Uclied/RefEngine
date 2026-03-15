@@ -149,6 +149,34 @@ class HealthInterface:
     def draw(self):
         self._sprites.draw()
 
+class JudgementInterface:
+    def __init__(self):
+        self._judgement_sprite = None
+        self._prev_judgement = None
+
+        self._sprite_list = arcade.SpriteList()
+
+        bus.subscribe("player_pressed", self._player_pressed)
+
+    def _player_pressed(self, direction_index, note):
+        if note is None:
+            return
+        if not note.judgement == self._prev_judgement:
+            self._sprite_list.clear()
+            self._judgement_sprite = arcade.create_text_sprite(note.judgement.upper(), arcade.color.WHITE, width=350, font_size=24, font_name="Paperlogy 8", bold=True, anchor_x="center", align="center", background_color=arcade.color.TRANSPARENT_BLACK)
+            self._sprite_list.append(self._judgement_sprite)
+            self._judgement_sprite.position = (arcade.get_window().width / 2, arcade.get_window().height - 100)
+    
+        self._judgement_sprite.scale = 1.5
+        self._prev_judgement = note.judgement
+
+    def update(self, delta_time):
+        if self._judgement_sprite is not None:
+            self._judgement_sprite.scale = arcade.math.lerp_2d(self._judgement_sprite.scale, arcade.Vec2(0, 0), delta_time * 5)
+
+    def draw(self):
+        self._sprite_list.draw()
+
 class GameInterfaceManager:
     def __init__(self, song_data):
         self._data = song_data
@@ -157,13 +185,16 @@ class GameInterfaceManager:
         self._timebar = TimebarInterface(song_data["name"])
         self._score = ScoreInterface()
         self._health = HealthInterface(song_data)
+        self._judgement = JudgementInterface()
 
     def update(self, delta_time):
         self._timebar.update(delta_time)
         self._health.update(delta_time)
+        self._judgement.update(delta_time)
 
     def draw(self):
         self._sprites.draw()
         self._timebar.draw()
         self._health.draw()
         self._score.draw()
+        self._judgement.draw()

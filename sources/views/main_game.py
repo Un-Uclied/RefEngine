@@ -26,7 +26,7 @@ class MainGameView(arcade.View):
         
         self.character_mgr  = SingerCharacterManager(self._song_data, self._background_data)
         self.receptor_mgr   = ReceptorManager(self._song_data["receptor_name"])
-        self.note_mgr       = NoteManager(self._song_data, is_bot_play=True)
+        self.note_mgr       = NoteManager(self._song_data, is_bot_play=False)
         self.song_mgr       = SongManager(self._song_data)
         self.score_mgr      = ScoreManager(self._config_data)
         self.camera_mgr     = CameraManager(self._song_data, self._background_data)
@@ -57,10 +57,10 @@ class MainGameView(arcade.View):
         self.camera_mgr.update(delta_time)
         self.game_interface_mgr.update(delta_time)
 
-        arcade.get_window().set_location(int(self._start_pos[0] + math.cos(self.song_mgr.song_ms / 1000 * 5) * 100), int(self._start_pos[1] + math.sin(self.song_mgr.song_ms / 1000 * 5) * 100))
-        for receptor in self.receptor_mgr.receptors:
-            receptor.position = (receptor.spawn_x + math.cos(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15, receptor.spawn_y + math.sin(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15)
-            receptor.angle = math.sin(self.song_mgr.song_ms / 1000 * 5 + receptor.direction_index) * 15 + math.cos(self.song_mgr.song_ms / 1000 * 3 + receptor.direction_index) * 10
+        # arcade.get_window().set_location(int(self._start_pos[0] + math.cos(self.song_mgr.song_ms / 1000 * 5) * 100), int(self._start_pos[1] + math.sin(self.song_mgr.song_ms / 1000 * 5) * 100))
+        # for receptor in self.receptor_mgr.receptors:
+        #     receptor.position = (receptor.spawn_x + math.cos(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15, receptor.spawn_y + math.sin(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15)
+        #     receptor.angle = math.sin(self.song_mgr.song_ms / 1000 * 5 + receptor.direction_index) * 15 + math.cos(self.song_mgr.song_ms / 1000 * 3 + receptor.direction_index) * 10
 
     def on_draw(self):
         self.clear()
