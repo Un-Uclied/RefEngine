@@ -23,7 +23,7 @@ class Application:
             draw_rate=DRAW_RATE,
             center_window=True,
         )
-        arcade.enable_timings()
+        # arcade.enable_timings()
 
         arcade.load_font("assets/fonts/NanumBarunGothic-YetHangul.ttf")
         arcade.load_font("assets/fonts/MBC 1961 M.ttf")
