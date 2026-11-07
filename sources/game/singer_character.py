@@ -1,71 +1,75 @@
 import arcade
-import json
-from sources.utils import *
+from .events import on_beat, on_note_pressed, on_note_released, on_opponent_pressed, on_opponent_released
 
 IDLE_DELAY = .1
 
 class SingerCharacterManager:
-    def __init__(self, song_data, background_data):
-        self.player     = SingerCharacter(song_data["player_name"],
+    def __init__(self, game_context, song_data, background_data, assets):
+        self.game_context = game_context
+        # Spawn Player Character
+        self.player     = SingerCharacter(song_data["player_name"], assets,
                                             background_data["player"]["position"][0], background_data["player"]["position"][1],
                                             background_data["player"]["scale"])
-        self.opponent   = SingerCharacter(song_data["opponent_name"],
+        # Spawn Opponent Character
+        self.opponent   = SingerCharacter(song_data["opponent_name"], assets,
                                             background_data["opponent"]["position"][0], background_data["opponent"]["position"][1],
                                             background_data["opponent"]["scale"])
-        if not (song_data["sub_character_name"] is None) and not (song_data["sub_character_name"] == ""):
-            self.sub_character = SingerCharacter(song_data["sub_character_name"],
+        # Spawn Sub Character
+        self.sub_character = None
+        if song_data["sub_character_name"]:
+            self.sub_character = SingerCharacter(song_data["sub_character_name"], assets,
                                       background_data["sub_character"]["position"][0], background_data["sub_character"]["position"][1],
                                     background_data["sub_character"]["scale"])
         
         self._character_spritelist = arcade.SpriteList()
         self._character_spritelist.append(self.player)
         self._character_spritelist.append(self.opponent)
-        self._character_spritelist.append(self.sub_character)
+        if self.sub_character is not None:
+            self._character_spritelist.append(self.sub_character)
 
         self._should_player_go_idle = True
         self._should_opponent_go_idle = True
         self._player_idle_timer = 0.0
         self._opponent_idle_timer = 0.0
 
-        bus.subscribe("beat", self._beat)
-        bus.subscribe("player_pressed", self._note_pressed)
-        bus.subscribe("opponent_pressed", self._note_pressed)
-        bus.subscribe("player_released", self._player_released)
-        bus.subscribe("opponent_released", self._opponent_released)
+        on_beat.connect(self._beat)
+        on_note_pressed.connect(self._note_pressed)
+        on_note_released.connect(self._player_released)
+        on_opponent_pressed.connect(self._note_pressed)
+        on_opponent_released.connect(self._opponent_released)
 
     def on_hide_view(self):
-        bus.unsubscribe("beat", self._beat)
-        bus.unsubscribe("player_pressed", self._note_pressed)
-        bus.unsubscribe("opponent_pressed", self._note_pressed)
-        bus.unsubscribe("player_released", self._player_released)
-        bus.unsubscribe("opponent_released", self._opponent_released)
+        on_beat.disconnect(self._beat)
+        on_note_pressed.disconnect(self._note_pressed)
+        on_note_released.disconnect(self._player_released)
+        on_opponent_pressed.disconnect(self._note_pressed)
+        on_opponent_released.disconnect(self._opponent_released)
 
-    def _note_pressed(self, direction_index, note):
+    def _note_pressed(self, sender, direction_index, note):
         if note is None:
             return
-        from sources.views import MainGameView
 
         anim = ["sing_left", "sing_down", "sing_up", "sing_right"][direction_index % 4]
         if direction_index < 4:
-            if f"{anim}_alt" in self.player.loaded_animations and (getattr(note, "note_type", "") == "alt_animation" or MainGameView.current.song_mgr.current_section_data.get("altAnim", False)):
+            if f"{anim}_alt" in self.player.loaded_animations and (getattr(note, "note_type", "") == "alt_animation" or (self.game_context.song_mgr.current_section_data or {}).get("altAnim", False)):
                 anim = f"{anim}_alt"
             self.player.play_animation(anim)
             self._should_player_go_idle = False
         if direction_index >= 4:
-            if f"{anim}_alt" in self.opponent.loaded_animations and (getattr(note, "note_type", "") == "alt_animation" or MainGameView.current.song_mgr.current_section_data.get("altAnim", False)):
+            if f"{anim}_alt" in self.opponent.loaded_animations and (getattr(note, "note_type", "") == "alt_animation" or (self.game_context.song_mgr.current_section_data or {}).get("altAnim", False)):
                 anim = f"{anim}_alt"
             self.opponent.play_animation(anim)
             self._should_opponent_go_idle = False
             
-    def _player_released(self, direction_index):
+    def _player_released(self, sender, direction_index):
         self._should_player_go_idle = True
         self._player_idle_timer = IDLE_DELAY
     
-    def _opponent_released(self, direction_index):
+    def _opponent_released(self, sender, direction_index):
         self._should_opponent_go_idle = True
         self._opponent_idle_timer = IDLE_DELAY
 
-    def _beat(self, beat: int, time: float):
+    def _beat(self, sender, beat: int, ms: float):
         self._advance_sprite(self.player, self._should_player_go_idle, self._player_idle_timer)
         self._advance_sprite(self.opponent, self._should_opponent_go_idle, self._opponent_idle_timer)
 
@@ -96,13 +100,12 @@ class SingerCharacterManager:
         self._character_spritelist.draw()
 
 class SingerCharacter(arcade.TextureAnimationSprite):
-    def __init__(self, name : str, center_x : float, center_y : float, scale : float):
-        with open(f"assets/characters/{name}/data.json", 'r', encoding='utf-8') as f:
-            self._data : dict = json.load(f)
+    def __init__(self, name : str, assets, center_x : float, center_y : float, scale : float):
+        self._data = assets.json(f"characters/{name}/data.json")
 
         self.name = name
         self.loaded_animations = {
-            anim_name: arcade.load_animated_gif(self._data["animations"][anim_name]["path"]).animation
+            anim_name: assets.image(self._data["animations"][anim_name]["path"])
             for anim_name in self._data.get("animations", {})
         }
 

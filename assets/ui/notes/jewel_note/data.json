@@ -1,7 +1,7 @@
 {
     "scale" : 0.65,
     "must_hit_note" : false,
-    "penaly_note" : false,
+    "penalty_note" : false,
     "paths" : {
         "left" : {
             "head" : "assets/ui/notes/jewel_note/left.png",

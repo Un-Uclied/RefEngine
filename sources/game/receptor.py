@@ -1,20 +1,17 @@
-import copy
-import json
-import time
-import arcade
-from sources.utils import *
+import copy, arcade, time
+from .events import on_note_pressed, on_note_released, on_opponent_pressed, on_opponent_released
 
 PRESS_MIN_DISPLAY_MS = 80
 
 class ReceptorManager:
-    def __init__(self, receptor_name : str):
-        with open(f"assets/ui/receptors/{receptor_name}/data.json", 'r') as f:
-            data = json.load(f)
+    def __init__(self, game_context, receptor_name : str, assets):
+        self.game_context = game_context
+        data = assets.json(f"ui/receptors/{receptor_name}/data.json")
 
         loaded_animation = {"left" : {}, "down" : {}, "up" : {}, "right" : {}}
         for direction_name in ["left", "down", "up", "right"]:
             for animation_name in ["idle", "press", "confirm"]:
-                loaded_animation[direction_name][animation_name] = arcade.load_animated_gif(data["animations"][direction_name][animation_name]).animation
+                loaded_animation[direction_name][animation_name] = assets.image(data["animations"][direction_name][animation_name])
 
         self.receptors = arcade.SpriteList()
         for actor_role in ["player", "opponent"]:
@@ -26,16 +23,16 @@ class ReceptorManager:
                     )
                 self.receptors.append(receptor)
 
-        bus.subscribe("player_pressed", self._note_pressed)
-        bus.subscribe("opponent_pressed", self._note_pressed)
-        bus.subscribe("player_released", self._note_released)
-        bus.subscribe("opponent_released", self._note_released)
+        on_note_pressed.connect(self._note_pressed)
+        on_note_released.connect(self._note_released)
+        on_opponent_pressed.connect(self._note_pressed)
+        on_opponent_released.connect(self._note_released)
 
     def on_hide_view(self):
-        bus.unsubscribe("player_pressed", self._note_pressed)
-        bus.unsubscribe("opponent_pressed", self._note_pressed)
-        bus.unsubscribe("player_released", self._note_released)
-        bus.unsubscribe("opponent_released", self._note_released)
+        on_note_pressed.disconnect(self._note_pressed)
+        on_note_released.disconnect(self._note_released)
+        on_opponent_pressed.disconnect(self._note_pressed)
+        on_opponent_released.disconnect(self._note_released)
 
     @staticmethod
     def index_to_name(index : int):
@@ -62,18 +59,17 @@ class ReceptorManager:
                 "opponent_right" : 7,
             }[name]
 
-    def _note_pressed(self, direction_index, note):
+    def _note_pressed(self, sender, direction_index, note):
         if note is None:
             self.receptors[direction_index].set_animation("press")
         else:
             self.receptors[direction_index].set_animation("confirm")
 
-    def _note_released(self, direction_index, **kwargs):
+    def _note_released(self, sender, direction_index, **kwargs):
         self.receptors[direction_index].request_idle()
 
     def update(self, delta_time : float):
-        from sources.views import MainGameView
-        song_mgr = MainGameView.current.song_mgr
+        song_mgr = self.game_context.song_mgr
 
         for r in self.receptors:
             r.update(delta_time)

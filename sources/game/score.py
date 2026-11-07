@@ -1,7 +1,7 @@
 from typing import Any
 from collections import defaultdict
 import arcade
-from sources.utils import bus
+from .events import on_note_pressed, on_note_missed, on_score_changed
 
 class ScoreManager:
     def __init__(self, config: dict[Any, int]):
@@ -12,8 +12,8 @@ class ScoreManager:
         self._total_notes = 0
         self._hit_counts: dict[str, int] = defaultdict(int)
         
-        bus.subscribe("player_pressed", self._player_pressed)
-        bus.subscribe("player_note_miss", self._player_note_miss)
+        on_note_pressed.connect(self._player_pressed)
+        on_note_missed.connect(self._player_note_miss)
 
     @property
     def score(self):
@@ -27,13 +27,13 @@ class ScoreManager:
     def health(self, value):
         self._health = min(max(value, 0), 100)
         accuracy = (self._good_hits / self._total_notes * 100) if self._total_notes > 0 else 0.0
-        bus.publish("score_updated", score=self._score, accuracy=accuracy)
+        on_score_changed.send(self, score=self._score, accuracy=accuracy)
 
     def on_hide_view(self):
-        bus.unsubscribe("player_pressed", self._player_pressed)
-        bus.unsubscribe("player_note_miss", self._player_note_miss)
+        on_note_pressed.disconnect(self._player_pressed)
+        on_note_missed.disconnect(self._player_note_miss)
 
-    def _player_pressed(self, direction_index, note):
+    def _player_pressed(self, sender, direction_index, note):
         if note is None:
             return
         
@@ -55,7 +55,7 @@ class ScoreManager:
             self._score += self._config.get(note.judgement, 0)
             self._publish_update()
 
-    def _player_note_miss(self, note):
+    def _player_note_miss(self, sender, note):
         # only count miss if it's a must_hit_note
         if note.must_hit_note:
             self._total_notes += 1
@@ -74,7 +74,7 @@ class ScoreManager:
 
     def _publish_update(self):
         accuracy = (self._good_hits / self._total_notes * 100) if self._total_notes > 0 else 0.0
-        bus.publish("score_updated", score=self._score, accuracy=accuracy)
+        on_score_changed.send(self, score=self._score, accuracy=accuracy)
 
     def reset(self):
         self._score = 0

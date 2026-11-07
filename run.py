@@ -1,4 +1,6 @@
 import arcade
+import sys
+from sources.assets import BASE_ASSETS
 from sources.views import *
 
 SCREEN_WIDTH = 1280
@@ -23,13 +25,15 @@ class Application:
             draw_rate=DRAW_RATE,
             center_window=True,
         )
-        # arcade.enable_timings()
+        arcade.enable_timings()
 
-        arcade.load_font("assets/fonts/NanumBarunGothic-YetHangul.ttf")
-        arcade.load_font("assets/fonts/MBC 1961 M.ttf")
-        arcade.load_font("assets/fonts/Paperlogy-8ExtraBold.ttf")
+        # arcade.resources.add_resource_handle("")
 
-        self.stage_view = MainGameView("endless-D")
+        arcade.load_font(str(BASE_ASSETS / "fonts/NanumBarunGothic-YetHangul.ttf"))
+        arcade.load_font(str(BASE_ASSETS / "fonts/MBC 1961 M.ttf"))
+        arcade.load_font(str(BASE_ASSETS / "fonts/Paperlogy-8ExtraBold.ttf"))
+
+        self.stage_view = MainGameView(sys.argv[1] if len(sys.argv) > 1 else "singularity")
         
         self.window.show_view(self.stage_view)
         arcade.run()

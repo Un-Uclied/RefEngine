@@ -1,10 +1,9 @@
-import pathlib
-
 import arcade
 
 
 class BackgroundManager:
-    def __init__(self, background_data):
+    def __init__(self, background_data, assets):
+        self.assets = assets
         self.world_sprites = arcade.SpriteList()
         self.screen_sprites = arcade.SpriteList()
         window = arcade.get_window()
@@ -17,11 +16,11 @@ class BackgroundManager:
             target.append(sprite)
 
     def _create_sprite(self, bg):
-        path = pathlib.Path(bg["path"])
+        path = bg["path"]
         speed = bg.get("speed", 1)
 
-        if path.suffix == ".gif":
-            anim = arcade.load_animated_gif(str(path)).animation
+        if path.lower().endswith(".gif"):
+            anim = self.assets.image(path)
             sprite = arcade.TextureAnimationSprite()
             sprite.animation = anim
             sprite.time = 0
@@ -29,7 +28,7 @@ class BackgroundManager:
             sprite._should_loop = True
         else:
             sprite = arcade.Sprite()
-            sprite.texture = arcade.load_texture(str(path))
+            sprite.texture = self.assets.image(path)
 
         sprite.speed = speed
 

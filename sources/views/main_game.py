@@ -1,10 +1,7 @@
 import math
-import random
-
 import arcade
-import json
 from sources.game import *
-from sources.utils import *
+from sources.assets import AssetStore
 
 class MainGameView(arcade.View):
     current : 'MainGameView' = None
@@ -12,26 +9,23 @@ class MainGameView(arcade.View):
     def __init__(self, song_name):
         super().__init__()
 
-        with open(f"assets/songs/{song_name}/data.json", 'r') as f:
-            self._song_data = json.load(f)
-        with open("assets/config/score.json", 'r') as f:
-            self._config_data = json.load(f)
-        with open(f"assets/backgrounds/{self._song_data["background"]}/data.json", 'r') as f:
-            self._background_data = json.load(f)
-        with open("assets/config/judgements.json", 'r') as f:
-            self._judgement_data = json.load(f)
+        self.assets, song_name = AssetStore.for_song(song_name)
+        self._song_data = self.assets.json(f"songs/{song_name}/data.json")
+        self._score_data = self.assets.json("config/score.json")
+        self._background_data = self.assets.json(f"backgrounds/{self._song_data['background']}/data.json")
+        self._judgement_data = self.assets.json("config/judgements.json")
 
     def on_show_view(self):
         MainGameView.current = self
         
-        self.character_mgr  = SingerCharacterManager(self._song_data, self._background_data)
-        self.receptor_mgr   = ReceptorManager(self._song_data["receptor_name"])
-        self.note_mgr       = NoteManager(self._song_data, is_bot_play=False)
-        self.song_mgr       = SongManager(self._song_data)
-        self.score_mgr      = ScoreManager(self._config_data)
-        self.camera_mgr     = CameraManager(self._song_data, self._background_data)
-        self.background_mgr = BackgroundManager(self._background_data)
-        self.game_interface_mgr = GameInterfaceManager(self._song_data)
+        self.character_mgr  = SingerCharacterManager(self, self._song_data, self._background_data, self.assets)
+        self.receptor_mgr   = ReceptorManager(self, self._song_data["receptor_name"], self.assets)
+        self.note_mgr       = NoteManager(self, self._song_data, self._judgement_data, is_bot_play=False)
+        self.song_mgr       = SongManager(self._song_data, self.assets)
+        self.score_mgr      = ScoreManager(self._score_data)
+        self.camera_mgr     = CameraManager(self, self._song_data, self._background_data)
+        self.background_mgr = BackgroundManager(self._background_data, self.assets)
+        self.game_interface_mgr = GameInterfaceManager(self, self._song_data, self.assets)
 
         self.song_mgr.play()
 
@@ -40,6 +34,7 @@ class MainGameView(arcade.View):
         return super().on_show_view()
     
     def on_hide_view(self):
+        self.song_mgr.stop()
         self.character_mgr.on_hide_view()
         self.receptor_mgr.on_hide_view()
         self.score_mgr.on_hide_view()
@@ -57,10 +52,10 @@ class MainGameView(arcade.View):
         self.camera_mgr.update(delta_time)
         self.game_interface_mgr.update(delta_time)
 
-        # arcade.get_window().set_location(int(self._start_pos[0] + math.cos(self.song_mgr.song_ms / 1000 * 5) * 100), int(self._start_pos[1] + math.sin(self.song_mgr.song_ms / 1000 * 5) * 100))
-        # for receptor in self.receptor_mgr.receptors:
-        #     receptor.position = (receptor.spawn_x + math.cos(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15, receptor.spawn_y + math.sin(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15)
-        #     receptor.angle = math.sin(self.song_mgr.song_ms / 1000 * 5 + receptor.direction_index) * 15 + math.cos(self.song_mgr.song_ms / 1000 * 3 + receptor.direction_index) * 10
+        arcade.get_window().set_location(int(self._start_pos[0] + math.cos(self.song_mgr.song_ms / 1000 * 5) * 100), int(self._start_pos[1] + math.sin(self.song_mgr.song_ms / 1000 * 5) * 100))
+        for receptor in self.receptor_mgr.receptors:
+            receptor.position = (receptor.spawn_x + math.cos(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15, receptor.spawn_y + math.sin(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15)
+            receptor.angle = math.sin(self.song_mgr.song_ms / 1000 * 5 + receptor.direction_index) * 15 + math.cos(self.song_mgr.song_ms / 1000 * 3 + receptor.direction_index) * 10
 
     def on_draw(self):
         self.clear()

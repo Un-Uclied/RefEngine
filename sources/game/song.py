@@ -1,13 +1,12 @@
 import arcade
-from sources.utils.event_bus import bus
-
+from .events import on_step, on_beat
 
 class SongManager:
-    def __init__(self, song_data: dict):
+    def __init__(self, song_data: dict, assets):
         self._song_data = song_data
 
-        self._inst_sound = arcade.load_sound(song_data["inst_path"])
-        self._voices_sound = arcade.load_sound(song_data["voices_path"])
+        self._inst_sound = arcade.load_sound(str(assets.path(song_data["inst_path"])))
+        self._voices_sound = arcade.load_sound(str(assets.path(song_data["voices_path"])))
 
         self.inst_player = None
         self.voices_player = None
@@ -44,23 +43,29 @@ class SongManager:
                 return sec["data"]
         return None
 
+    @property
+    def step(self):
+        return self._last_step
+
+    @property
+    def beat(self):
+        return self._last_beat
+
     def update(self):
         if not self.music_playing:
             return
 
-        t = self.song_ms
-
-        for i in range(self._last_step + 1, len(self._step_times)):
-            if t >= self._step_times[i]:
-                self._last_step = i
-                bus.publish("step", step=i, time=t)
+        ms = self.song_ms
+        for step in range(self._last_step + 1, len(self._step_times)):
+            if ms >= self._step_times[step]:
+                self._last_step = step
+                on_step.send(self, step=step, ms=ms)
             else:
                 break
-
-        for i in range(self._last_beat + 1, len(self._beat_times)):
-            if t >= self._beat_times[i]:
-                self._last_beat = i
-                bus.publish("beat", beat=i, time=t)
+        for beat in range(self._last_beat + 1, len(self._beat_times)):
+            if ms >= self._beat_times[beat]:
+                self._last_beat = beat
+                on_beat.send(self, beat=beat, ms=ms)
             else:
                 break
 

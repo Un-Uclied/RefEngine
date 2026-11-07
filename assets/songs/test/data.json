@@ -3,9 +3,11 @@
     "opponent_name": "crovan",
     "sub_character_name": "null",
 
+    "name": "test",
     "song_name": "test",
     "description": "Song description goes here.",
 
+    "background": "crovan_stage",
     "stage_name": "test",
     "camera_zoom" : 0.5,
 
