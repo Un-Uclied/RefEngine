@@ -1,7 +1,7 @@
 """Run from the project root: python -B -m unittest discover -s tests -v."""
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 import arcade
 
@@ -10,9 +10,27 @@ from sources.game.events import (
     on_opponent_pressed, on_opponent_released, on_score_changed, on_beat,
 )
 from sources.views import MainGameView
+from sources.game.song import SongManager
 
 
 class GameSmokeTest(unittest.TestCase):
+    def test_resume_keeps_volume_and_song_position(self):
+        song = SongManager.__new__(SongManager)
+        song._paused = True
+        song._pause_time = 1250
+        song.volume_percent = 40
+        song._inst_sound = object()
+        song._voices_sound = object()
+        players = (Mock(), Mock())
+        with patch("arcade.play_sound", side_effect=players) as play_sound:
+            song.resume()
+        self.assertEqual(play_sound.call_args_list, [
+            call(song._inst_sound, volume=0.4),
+            call(song._voices_sound, volume=0.4),
+        ])
+        for player in players:
+            player.seek.assert_called_once_with(1.25)
+
     def test_signals_gameplay_and_view_cleanup(self):
         window = arcade.Window(1280, 720, visible=False)
         self.addCleanup(window.close)
@@ -21,12 +39,40 @@ class GameSmokeTest(unittest.TestCase):
         arcade.load_font("assets/fonts/Paperlogy-8ExtraBold.ttf")
         view = MainGameView("singularity")
         player = SimpleNamespace(time=0, source=SimpleNamespace(duration=240))
-        with patch("arcade.play_sound", return_value=player):
+        voices = SimpleNamespace()
+        with patch("arcade.play_sound", side_effect=(player, voices)):
             window.show_view(view)
+        view.note_mgr.is_bot_play = True
+        view.on_key_press(arcade.key.MINUS, 0)
+        self.assertEqual(view.song_mgr.volume_percent, 90)
+        self.assertAlmostEqual(player.volume, 0.9)
+        self.assertAlmostEqual(voices.volume, 0.9)
+        for _ in range(10):
+            view.on_key_press(arcade.key.NUM_SUBTRACT, 0)
+        self.assertEqual(view.song_mgr.volume_percent, 0)
+        view.on_key_press(arcade.key.EQUAL, 0)
+        self.assertEqual(view.song_mgr.volume_percent, 10)
+        self.assertAlmostEqual(player.volume, 0.1)
+        self.assertAlmostEqual(voices.volume, 0.1)
+        for _ in range(10):
+            view.on_key_press(arcade.key.NUM_ADD, 0)
+        self.assertEqual(view.song_mgr.volume_percent, 100)
+        view.note_mgr.is_bot_play = False
+        self.assertEqual(len(view.song_scripts), 2)
         self.assertTrue(any(
             note["penalty_note"] for note in view.note_mgr.chart_data
             if note["note_type"] == "flame_note"
         ))
+        character = view.character_mgr.player
+        character._data["animations"]["idle"]["animation_speed"] = 2
+        character.time = 0
+        character.update_animation(0.01)
+        self.assertAlmostEqual(character.time, 0.02)
+        character._data["animations"]["idle"]["animation_speed"] = 1
+        view.on_key_press(arcade.key.D, 0)
+        self.assertEqual(view.receptor_mgr.receptors[0]._current_animation, "press")
+        self.assertEqual(view.score_mgr.score, 0)
+        view.on_key_release(arcade.key.D, 0)
 
         # Exercise the real keyboard -> note -> score/UI signal chain.
         first_hold = next(
@@ -42,6 +88,16 @@ class GameSmokeTest(unittest.TestCase):
         ]
         view.on_key_press(key, 0)
         self.assertGreater(view.score_mgr.score, previous_score)
+        self.assertEqual(len(view.splash_mgr.sprites), 1)
+        splash = view.splash_mgr.sprites[0]
+        receptor = view.receptor_mgr.receptors[first_hold["direction_index"]]
+        self.assertEqual(splash.position, receptor.position)
+        color = ("purple", "blue", "green", "red")[first_hold["direction_index"]]
+        self.assertIs(splash.animation, view.splash_mgr.animations[(color, 1)])
+        view.splash_mgr._note_pressed(None, first_hold["direction_index"], SimpleNamespace(judgement="good"))
+        self.assertEqual(len(view.splash_mgr.sprites), 1)
+        view.splash_mgr._note_pressed(None, first_hold["direction_index"], SimpleNamespace(judgement="sick"))
+        self.assertIs(view.splash_mgr.sprites[1].animation, view.splash_mgr.animations[(color, 2)])
         judgement = view.game_interface_mgr._judgement._judgement_sprite
         self.assertEqual(judgement.center_x, window.width / 2)
         self.assertLess(judgement.width, 350)
@@ -54,6 +110,8 @@ class GameSmokeTest(unittest.TestCase):
         view.on_key_release(key, 0)
         self.assertGreater(view.score_mgr._hit_counts["miss"], previous_misses)
         view.on_draw()
+        view.splash_mgr.update(0.21)
+        self.assertEqual(len(view.splash_mgr.sprites), 0)
 
         # Traverse the remaining chart, including every custom note type and hold.
         view.note_mgr.is_bot_play = True

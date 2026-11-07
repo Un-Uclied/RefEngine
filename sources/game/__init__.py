@@ -5,4 +5,5 @@ from .receptor          import ReceptorManager
 from .score             import ScoreManager
 from .singer_character  import SingerCharacterManager
 from .song              import SongManager
+from .splash            import SplashManager
 from .game_interface    import GameInterfaceManager

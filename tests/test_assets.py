@@ -2,15 +2,28 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import arcade
 
 from sources import assets
+from sources.game.note import NoteManager
 from sources.views import MainGameView
 
 
 class AssetStoreTest(unittest.TestCase):
+    def test_misspelled_penalty_setting_is_rejected(self):
+        manager = NoteManager.__new__(NoteManager)
+        manager.game_context = SimpleNamespace(assets=SimpleNamespace(
+            json=lambda path: {"penaly_note": True},
+        ))
+        manager.song_data = {"notes": []}
+        manager.note_settings = {}
+        manager.note_assets = {}
+        with self.assertRaisesRegex(ValueError, "penalty_note"):
+            manager.load_resources()
+
     def test_mod_override_fallback_and_cached_image(self):
         with tempfile.TemporaryDirectory(dir=assets.PROJECT_ROOT) as directory:
             root = Path(directory)

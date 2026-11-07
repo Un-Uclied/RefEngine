@@ -10,6 +10,7 @@ class SongManager:
 
         self.inst_player = None
         self.voices_player = None
+        self.volume_percent = 100
 
         self.music_playing = False
         self._paused = False
@@ -73,13 +74,19 @@ class SongManager:
         if self.music_playing:
             return
 
-        self.inst_player = arcade.play_sound(self._inst_sound)
-        self.voices_player = arcade.play_sound(self._voices_sound)
+        self.inst_player = arcade.play_sound(self._inst_sound, volume=self.volume_percent / 100)
+        self.voices_player = arcade.play_sound(self._voices_sound, volume=self.volume_percent / 100)
 
         self.music_playing = True
         self._paused = False
         self._last_beat = -1
         self._last_step = -1
+
+    def change_volume(self, delta_percent):
+        self.volume_percent = max(0, min(100, self.volume_percent + delta_percent))
+        for player in (self.inst_player, self.voices_player):
+            if player:
+                player.volume = self.volume_percent / 100
 
     def stop(self):
         if self.inst_player:
@@ -111,13 +118,16 @@ class SongManager:
 
         self.inst_player = arcade.play_sound(
             self._inst_sound,
-            start=self._pause_time / 1000
+            volume=self.volume_percent / 100
         )
 
         self.voices_player = arcade.play_sound(
             self._voices_sound,
-            start=self._pause_time / 1000
+            volume=self.volume_percent / 100
         )
+        for player in (self.inst_player, self.voices_player):
+            if player:
+                player.seek(self._pause_time / 1000)
 
         self._paused = False
         self.music_playing = True

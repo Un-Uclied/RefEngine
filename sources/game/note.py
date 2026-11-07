@@ -143,6 +143,8 @@ class NoteManager:
 
         for note_type in note_types:
             self.note_settings[note_type] = self.game_context.assets.json(f"ui/notes/{note_type}/data.json")
+            if "penaly_note" in self.note_settings[note_type]:
+                raise ValueError(f"ui/notes/{note_type}/data.json: use 'penalty_note', not 'penaly_note'")
 
             self.note_assets[note_type] = {}
             for direction in ["left", "down", "up", "right"]:
@@ -165,7 +167,7 @@ class NoteManager:
                     "sustain_length": raw_note[2],
                     "note_type": note_type,
                     "must_hit_note": settings.get("must_hit_note", True),
-                    "penalty_note": settings.get("penalty_note", settings.get("penaly_note", False)),
+                    "penalty_note": settings.get("penalty_note", False),
                     "settings": settings
                 })
         self.chart_data.sort(key=lambda note: note["strum_time"])
@@ -256,8 +258,7 @@ class NoteManager:
     def on_key_press(self, direction_index: int):
         song_ms = self.game_context.song_mgr.song_ms
         note = self.process_hit(direction_index, song_ms)
-        if note:
-            on_note_pressed.send(self, direction_index=direction_index, note=note)
+        on_note_pressed.send(self, direction_index=direction_index, note=note)
 
     def on_key_release(self, direction_index: int):
         song_ms = self.game_context.song_mgr.song_ms

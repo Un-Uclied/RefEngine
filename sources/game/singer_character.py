@@ -138,8 +138,9 @@ class SingerCharacter(arcade.TextureAnimationSprite):
     def update_animation(self, delta_time, *args, **kwargs):
         if not self.animation:
             return
+        speed = self._data["animations"][self.current_animation_name].get("animation_speed", 1)
         if self._should_loop:
-            return super().update_animation(delta_time, *args, **kwargs)
+            return super().update_animation(delta_time * speed, *args, **kwargs)
         else:
             if self._current_keyframe_index < len(self.animation.keyframes) - 1:
-                return super().update_animation(delta_time, *args, **kwargs)
+                return super().update_animation(delta_time * speed, *args, **kwargs)

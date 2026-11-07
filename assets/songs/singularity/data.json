@@ -9,6 +9,7 @@
     "background": "crovan_stage",
 
     "splash_name": "default",
+    "scripts": ["alt_camera", "opponent_float"],
     "receptor_name": "default",
 
     "inst_path" : "assets/songs/singularity/Inst.ogg",
