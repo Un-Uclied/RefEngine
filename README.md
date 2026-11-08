@@ -31,6 +31,7 @@ python run.py
 | `assets/songs/` | 기본 곡 차트와 `Inst.ogg`·`Voices.ogg` |
 | `assets/notes/` | 노트 종류별 설정과 이미지 |
 | `assets/scripts/` | 기본 노래 스크립트와 `notes/`의 노트 스크립트 |
+| `assets/shaders/` | 곡별 화면 효과의 GLSL 파일 |
 | `mods/` | 기본 애셋을 덮어쓰는 모드 |
 
 ## 모딩
@@ -50,6 +51,7 @@ mods/demo/assets/
 
 - 곡의 `data.json`에서 `"scripts": ["my_song"]`으로 `SongScript(game)`를 지정합니다.
 - 노트의 `data.json`에서 `"scripts": ["my_effect"]`로 `NoteScript(game, note)`를 지정합니다. 각 노트는 자기 스크립트 인스턴스를 가집니다.
+- 곡의 `data.json`에서 `"shaders": [{"name": "my_effect", "uniforms": {"strength": 0.2}}]`로 전체 화면 효과를 지정합니다. `assets/shaders/my_effect.frag`는 모드에서 덮어쓸 수 있습니다.
 - [한국어 모딩 가이드](mods/README.ko.md)와 [English modding guide](mods/README.md)에 차트 형식, 필수 파일, 스크립트 예제와 이벤트가 있습니다. 매니저·노트 API는 코드의 영어/한국어 docstring에서도 확인할 수 있습니다.
 
 ### GIF 캐릭터 생성기

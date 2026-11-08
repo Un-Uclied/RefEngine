@@ -2,6 +2,7 @@ import math
 import runpy
 import arcade
 from sources.game import *
+from sources.game.post_process import PostProcessManager
 from sources.assets import AssetStore
 
 class MainGameView(arcade.View):
@@ -27,6 +28,7 @@ class MainGameView(arcade.View):
         self.camera_mgr: CameraManager
         self.background_mgr: BackgroundManager
         self.game_interface_mgr: GameInterfaceManager
+        self.shader_mgr: PostProcessManager | None = None
         self._ready = False
         self._fade_alpha = 0
         self._sounds = None
@@ -73,6 +75,9 @@ class MainGameView(arcade.View):
         self.background_mgr = BackgroundManager(self._background_data, self.assets)
         self.game_interface_mgr = GameInterfaceManager(self, self._song_data, self.assets)
         yield "Scene"
+        if "shaders" in self._song_data:
+            self.shader_mgr = PostProcessManager(self._song_data["shaders"], self.assets)
+            yield "Shaders"
         script_names = self._song_data.get("scripts")
         if script_names is None:
             script_names = [self._song_data["script"]] if self._song_data.get("script") else []
@@ -100,6 +105,8 @@ class MainGameView(arcade.View):
         self.score_mgr.on_hide_view()
         self.camera_mgr.on_hide_view()
         self.game_interface_mgr.on_hide_view()
+        if self.shader_mgr is not None:
+            self.shader_mgr.on_hide_view()
         self._ready = False
     
         return super().on_hide_view()
@@ -121,13 +128,16 @@ class MainGameView(arcade.View):
         self.camera_mgr.update(delta_time)
         self.game_interface_mgr.update(delta_time)
 
-        # arcade.get_window().set_location(int(self._start_pos[0] + math.cos(self.song_mgr.song_ms / 1000 * 5) * 100), int(self._start_pos[1] + math.sin(self.song_mgr.song_ms / 1000 * 5) * 100))
-        # for receptor in self.receptor_mgr.receptors:
-            # receptor.position = (receptor.spawn_x + math.cos(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15, receptor.spawn_y + math.sin(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15)
-            # receptor.angle = math.sin(self.song_mgr.song_ms / 1000 * 5 + receptor.direction_index) * 15 + math.cos(self.song_mgr.song_ms / 1000 * 3 + receptor.direction_index) * 10
+        arcade.get_window().set_location(int(self._start_pos[0] + math.cos(self.song_mgr.song_ms / 1000 * 5) * 100), int(self._start_pos[1] + math.sin(self.song_mgr.song_ms / 1000 * 5) * 100))
+        for receptor in self.receptor_mgr.receptors:
+            receptor.position = (receptor.spawn_x + math.cos(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15, receptor.spawn_y + math.sin(self.song_mgr.song_ms / 1000 * 2 + receptor.direction_index) * 15)
+            receptor.angle = math.sin(self.song_mgr.song_ms / 1000 * 5 + receptor.direction_index) * 15 + math.cos(self.song_mgr.song_ms / 1000 * 3 + receptor.direction_index) * 10
 
     def on_draw(self):
-        self.clear()
+        if self.shader_mgr is not None and self.shader_mgr.effects:
+            self.shader_mgr.begin()
+        else:
+            self.clear()
         with self.camera_mgr.camera_world.activate():
             self.background_mgr.draw_world()
             self.character_mgr.draw()
@@ -140,6 +150,8 @@ class MainGameView(arcade.View):
             self.splash_mgr.draw()
         
         arcade.draw_text(f"FPS : {math.floor(arcade.get_fps())}", 20, arcade.get_window().height - 20, arcade.color.GREEN, 24, bold=False)
+        if self.shader_mgr is not None and self.shader_mgr.effects:
+            self.shader_mgr.finish()
         if self._fade_alpha:
             window = arcade.get_window()
             arcade.draw_lbwh_rectangle_filled(0, 0, window.width, window.height, (0, 0, 0, int(self._fade_alpha)))

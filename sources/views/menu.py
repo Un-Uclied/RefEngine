@@ -146,7 +146,7 @@ class LoadingView(arcade.View):
             if hasattr(script, "on_hide"):
                 script.on_hide()
         for name in ("note_mgr", "character_mgr", "receptor_mgr", "splash_mgr",
-                     "score_mgr", "camera_mgr", "game_interface_mgr"):
+                     "score_mgr", "camera_mgr", "game_interface_mgr", "shader_mgr"):
             manager = getattr(self._game, name, None)
             if manager is not None:
                 manager.on_hide_view()

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import arcade
+from PIL import ImageChops
 
 from sources.game.events import (
     on_note_missed, on_note_pressed, on_note_released,
@@ -11,9 +12,26 @@ from sources.game.events import (
 )
 from sources.views import MainGameView
 from sources.game.song import SongManager
+from sources.game.post_process import PostProcessManager
+from sources.assets import AssetStore
 
 
 class GameSmokeTest(unittest.TestCase):
+    def test_vignette_darkens_edges(self):
+        window = arcade.Window(64, 64, visible=False)
+        self.addCleanup(window.close)
+        shaders = PostProcessManager(
+            [{"name": "vignette", "uniforms": {
+                "strength": 1.0, "radius": 0.7, "softness": 0.3,
+            }}], AssetStore(),
+        )
+        self.addCleanup(shaders.on_hide_view)
+        shaders.begin()
+        arcade.draw_lbwh_rectangle_filled(0, 0, 64, 64, arcade.color.RED)
+        shaders.finish()
+        image = arcade.get_image()
+        self.assertGreater(image.getpixel((32, 32))[0], image.getpixel((2, 2))[0] + 100)
+
     def test_resume_keeps_volume_and_song_position(self):
         song = SongManager.__new__(SongManager)
         song._paused = True
@@ -42,6 +60,14 @@ class GameSmokeTest(unittest.TestCase):
         voices = SimpleNamespace()
         with patch("arcade.play_sound", side_effect=(player, voices)):
             window.show_view(view)
+        self.assertEqual(len(view.shader_mgr.effects), 3)
+        with_effects = arcade.get_image().convert("RGB").crop((100, 100, 1180, 620))
+        shaders = view.shader_mgr
+        view.shader_mgr = None
+        view.on_draw()
+        without_effects = arcade.get_image().convert("RGB").crop((100, 100, 1180, 620))
+        view.shader_mgr = shaders
+        self.assertIsNotNone(ImageChops.difference(with_effects, without_effects).getbbox())
         view.note_mgr.is_bot_play = True
         view.on_key_press(arcade.key.MINUS, 0)
         self.assertEqual(view.song_mgr.volume_percent, 90)

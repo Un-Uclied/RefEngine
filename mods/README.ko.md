@@ -15,6 +15,7 @@ mods/demo/assets/
 ├─ notes/my_note/data.json
 ├─ scripts/my_song.py
 ├─ scripts/notes/my_effect.py
+├─ shaders/my_effect.frag
 └─ characters/my_character/data.json
 ```
 
@@ -131,7 +132,21 @@ class SongScript:
 
 SICK 스플래시를 교체하려면 곡의 `splash_name`을 설정하고 `assets/ui/splashes/<이름>/`에 `noteSplashes.xml`과 XML의 `imagePath`가 가리키는 PNG를 둡니다. XML에는 blue·green·purple·red 각각의 변형 1·2에 대해 4프레임이 있어야 합니다. 프레임 이름 규칙은 기본 아틀라스를 참고하세요.
 
-## 6. 모드 확인
+## 6. 전체 화면 셰이더
+
+곡의 `data.json`에 순서가 있는 `shaders` 배열을 넣습니다. 이 필드가 없는 곡에는 효과가 적용되지 않습니다. Singularity의 설정은 다음과 같습니다.
+
+```json
+"shaders": [
+  {"name": "chromatic_aberration", "uniforms": {"strength": 0.003}},
+  {"name": "vignette", "uniforms": {"strength": 0.55, "radius": 0.75, "softness": 0.4}},
+  {"name": "lens_distortion", "uniforms": {"strength": 0.12}}
+]
+```
+
+이름마다 `assets/shaders/<이름>.frag`를 읽습니다. `mods/demo/assets/shaders/`에 같은 이름의 파일을 두면 기본 셰이더를 덮어씁니다. 새 효과는 `.frag` 파일을 만들고 곡의 배열에 이름을 추가하면 됩니다. 엔진은 GLSL 330의 `in vec2 uv`(화면 좌표 0–1)를 전달하고, 이전 단계의 화면을 텍스처 유닛 0의 `uniform sampler2D u_texture`에 연결합니다. `out vec4 fragColor`를 선언해 출력 색을 기록하세요. 수치 매개변수는 GLSL uniform과 같은 이름으로 `uniforms`에 지정합니다. 효과는 배열 순서대로 배경·캐릭터·HUD·노트 전체에 적용되며, 화면 전환 페이드는 그 뒤에 그려집니다.
+
+## 7. 모드 확인
 
 1. `python run.py demo:track`을 실행해 메뉴에 곡이 선택되는지 확인합니다.
 2. **START**를 누릅니다. 로딩 오류가 뜨면 메시지를 확인하고 `Esc`로 돌아갑니다.

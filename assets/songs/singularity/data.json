@@ -10,6 +10,11 @@
 
     "splash_name": "default",
     "scripts": ["alt_camera", "opponent_float"],
+    "shaders": [
+        {"name": "chromatic_aberration", "uniforms": {"strength": 0.01}},
+        {"name": "vignette", "uniforms": {"strength": 0.75, "radius": 0.65, "softness": 0.4}},
+        {"name": "lens_distortion", "uniforms": {"strength": 0.05}}
+    ],
     "receptor_name": "default",
 
     "inst_path" : "assets/songs/singularity/Inst.ogg",

@@ -15,6 +15,7 @@ mods/demo/assets/
 ├─ notes/my_note/data.json
 ├─ scripts/my_song.py
 ├─ scripts/notes/my_effect.py
+├─ shaders/my_effect.frag
 └─ characters/my_character/data.json
 ```
 
@@ -131,7 +132,21 @@ Receptor data lives at `assets/ui/receptors/<name>/data.json` and supplies `idle
 
 For custom SICK splashes, set `splash_name` and place `noteSplashes.xml` plus the PNG named by its `imagePath` in `assets/ui/splashes/<name>/`. The XML needs four frames for each of variants 1 and 2 of blue, green, purple and red, following the built-in default atlas naming pattern.
 
-## 6. Check your mod
+## 6. Fullscreen shaders
+
+Add an ordered `shaders` list to a song's `data.json`. Songs without this field render normally. Singularity uses `chromatic_aberration`, `vignette` and `lens_distortion` as an example:
+
+```json
+"shaders": [
+  {"name": "chromatic_aberration", "uniforms": {"strength": 0.003}},
+  {"name": "vignette", "uniforms": {"strength": 0.55, "radius": 0.75, "softness": 0.4}},
+  {"name": "lens_distortion", "uniforms": {"strength": 0.12}}
+]
+```
+
+Each name loads `assets/shaders/<name>.frag`; a file in `mods/demo/assets/shaders/` with the same name replaces the built-in one. To add an effect, create a new `.frag` file and list its name in the song. The engine supplies GLSL 330 vertex output `in vec2 uv` (0–1 screen coordinates) and binds the preceding image to `uniform sampler2D u_texture` at texture unit 0. Declare `out vec4 fragColor` and write each output pixel. Put numeric shader parameters in `uniforms`, with matching GLSL uniform names. Effects run in array order over the whole game view, including HUD and notes. The final fade is drawn afterward.
+
+## 7. Check your mod
 
 1. Run `python run.py demo:track` and confirm the menu selects your song.
 2. Press **START**. If loading fails, read the error on screen, then press `Esc`.
