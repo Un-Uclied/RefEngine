@@ -6,6 +6,17 @@ BEAT_NOTE_CAMERA_ADD_ZOOM = 0.15
 BEAT_WORLD_CAMERA_ADD_ZOOM = 0.15
 
 class CameraManager:
+    """Control world, note and HUD cameras during beats and note hits.
+
+    Scripts can set ``shake_offset`` to a world-space Vec2. Set
+    ``note_move_multiplier`` to a callable ``(direction_index, note) -> float``
+    to scale the camera's movement on note hits; the default returns 1.0.
+
+    비트와 노트 히트에 맞춰 월드·노트·HUD 카메라를 제어합니다.
+    스크립트에서 ``shake_offset``에 월드 좌표 Vec2를 넣어 흔들림을 줄 수 있습니다.
+    ``note_move_multiplier``에는 ``(direction_index, note) -> float`` 함수를
+    지정해 노트 히트 시 이동량을 배율로 조절합니다. 기본값은 1.0입니다.
+    """
     def __init__(self, game_context, song_data : dict, background_data : dict):
         self.game_context = game_context
         self.camera_world = arcade.Camera2D()

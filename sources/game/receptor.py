@@ -4,6 +4,15 @@ from .events import on_note_pressed, on_note_released, on_opponent_pressed, on_o
 PRESS_MIN_DISPLAY_MS = 80
 
 class ReceptorManager:
+    """Own eight receptor sprites in player-then-opponent lane order.
+
+    ``receptors[0:4]`` are player lanes, ``receptors[4:8]`` are opponent lanes;
+    each group is ordered left, down, up, right.
+
+    리셉터 8개를 플레이어·상대 순서로 관리합니다.
+    ``receptors[0:4]``는 플레이어, ``receptors[4:8]``은 상대 레인이며
+    각 그룹의 방향 순서는 왼쪽·아래·위·오른쪽입니다.
+    """
     def __init__(self, game_context, receptor_name : str, assets):
         self.game_context = game_context
         data = assets.json(f"ui/receptors/{receptor_name}/data.json")
@@ -36,6 +45,10 @@ class ReceptorManager:
 
     @staticmethod
     def index_to_name(index : int):
+        """Convert a lane index such as 4 to ``opponent_left``.
+
+        4 같은 레인 번호를 ``opponent_left`` 같은 이름으로 바꿉니다.
+        """
         return {
                 0 : "player_left",
                 1 : "player_down",
@@ -48,6 +61,10 @@ class ReceptorManager:
             }[index]
     @staticmethod
     def name_to_index(name : str):
+        """Convert a name such as ``player_up`` to its lane index.
+
+        ``player_up`` 같은 이름을 레인 번호로 바꿉니다.
+        """
         return {
                 "player_left" : 0,
                 "player_down" : 1,
@@ -80,6 +97,13 @@ class ReceptorManager:
         self.receptors.draw()
         
 class Receptor(arcade.Sprite):
+    """One arrow target with idle, press and confirm animations.
+
+    ``spawn_x`` and ``spawn_y`` retain its initial position for script effects.
+
+    idle·press·confirm 애니메이션이 있는 화살표 리셉터 하나입니다.
+    ``spawn_x``와 ``spawn_y``에는 스크립트 효과에 쓸 초기 위치가 보관됩니다.
+    """
     def __init__(self, direction_index, loaded_settings, loaded_animation):
         super().__init__()
         self.direction_index = direction_index
@@ -99,6 +123,10 @@ class Receptor(arcade.Sprite):
         self._update_texture(0)
 
     def set_animation(self, name: str):
+        """Select ``idle``, ``press`` or ``confirm`` immediately.
+
+        ``idle``·``press``·``confirm`` 중 하나를 즉시 선택합니다.
+        """
         self._current_animation = name
         # record when press animation started
         if name == "press" or name == "confirm":
@@ -109,6 +137,10 @@ class Receptor(arcade.Sprite):
             self._pending_idle = False
 
     def request_idle(self):
+        """Return to idle after the minimum press/confirm display time.
+
+        press/confirm이 최소 표시 시간을 채운 뒤 idle로 돌아가게 요청합니다.
+        """
         if self._current_animation in ["press", "confirm"]:
             self._pending_idle = True
         else:

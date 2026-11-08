@@ -1,6 +1,10 @@
-import math, arcade
-from typing import Dict, List, Tuple, Any, Optional
+from __future__ import annotations
+import math, runpy, arcade
+from typing import Dict, List, Tuple, Any, Optional, TYPE_CHECKING
 from .events import on_note_pressed, on_note_released, on_note_missed, on_opponent_pressed, on_opponent_released
+
+if TYPE_CHECKING:
+    from sources.views.main_game import MainGameView
 
 REMOVE_DELAY_MS = 200
 MISS_ALPHA = 50
@@ -33,6 +37,10 @@ def calculate_line_bounds(
     return left, bottom, final_width, final_height
 
 class HoldSegment(arcade.Sprite):
+    """One visual segment of a sustain tail, positioned relative to its Note.
+
+    부모 노트 위치에 맞춰 배치되는 롱 노트 꼬리의 한 조각입니다.
+    """
     def __init__(self, note: 'Note', index: int, texture_source: Any, base_height: float, scale: float):
         texture = texture_source.keyframes[0].texture if hasattr(texture_source, "keyframes") else texture_source
         super().__init__(texture, scale, 0, 0)
@@ -54,7 +62,21 @@ class HoldSegment(arcade.Sprite):
         self.center_y = self.parent_note.center_y + math.sin(direction_radian) * offset
 
 class Note(arcade.TextureAnimationSprite):
-    def __init__(self, note_data: dict, assets: dict, target_receptor: Any):
+    """A spawned chart note passed to ``NoteScript(game, note)``.
+
+    ``direction_index`` uses 0-3 for the player and 4-7 for the opponent.
+    ``strum_time`` and ``sustain_length`` are milliseconds. A script may set
+    ``character_animation`` to a loaded animation name or None to suppress it.
+    ``judgement`` is filled when the note is hit; ``scripts`` holds this note's
+    independent script instances.
+
+    스폰된 차트 노트이며 ``NoteScript(game, note)``의 ``note``로 전달됩니다.
+    ``direction_index``는 플레이어 0~3, 상대 4~7이고 시간 값은 밀리초입니다.
+    ``character_animation``을 로드된 이름으로 바꾸거나 None으로 설정해
+    캐릭터 노래 애니메이션을 막을 수 있습니다. ``judgement``는 히트 시 채워지고
+    ``scripts``에는 이 노트만의 스크립트 인스턴스가 들어 있습니다.
+    """
+    def __init__(self, note_data: dict, assets: dict, target_receptor: Any, game_context: Any, script_classes: list):
         self.direction_index = note_data["direction_index"]
         self.strum_time = note_data["strum_time"]
         self.sustain_length = note_data["sustain_length"]
@@ -62,6 +84,7 @@ class Note(arcade.TextureAnimationSprite):
         self.must_hit_note = note_data["must_hit_note"]
         self.penalty_note = note_data["penalty_note"]
         self.settings = note_data["settings"]
+        self.character_animation: str | None = ("sing_left", "sing_down", "sing_up", "sing_right")[self.direction_index % 4]
         self.assets = assets
         self.target_receptor = target_receptor
 
@@ -77,9 +100,24 @@ class Note(arcade.TextureAnimationSprite):
         if isinstance(head_asset, arcade.Texture):
             head_asset = arcade.TextureAnimation([arcade.TextureKeyframe(head_asset, 100)])
         super().__init__(0, 0, self.settings["scale"], head_asset)
+        self.scripts = [script(game_context, self) for script in script_classes]
+
+    def run_scripts(self, hook, *args):
+        """Invoke an optional hook on this note's scripts in data.json order.
+
+        data.json에 적힌 순서대로 각 스크립트의 선택적 훅을 호출합니다.
+        """
+        for script in self.scripts:
+            method = getattr(script, hook, None)
+            if method:
+                method(*args)
 
     @property
     def is_opponent(self) -> bool:
+        """True for opponent lanes 4-7.
+
+        상대 레인 4~7의 노트이면 True입니다.
+        """
         return self.direction_index >= 4
 
     def set_visual_miss(self):
@@ -110,12 +148,23 @@ class Note(arcade.TextureAnimationSprite):
             self.segments[-1].texture = self.assets["end"]
 
     def despawn(self):
+        self.run_scripts("on_despawn")
         self.remove_from_sprite_lists()
         for segment in self.segments:
             segment.remove_from_sprite_lists()
 
 class NoteManager:
-    def __init__(self, game_context: Any, song_data: dict, judgement_data: dict, is_bot_play: bool):
+    """Load note types, spawn notes and route input to note script hooks.
+
+    ``notes`` contains active Note sprites; ``chart_data`` is sorted by hit time.
+    Note scripts run ``on_hit`` before hit signals, then optional ``on_miss``,
+    ``on_update(delta_time)`` and ``on_despawn`` at their lifecycle points.
+
+    노트 종류를 불러오고 스폰 및 입력을 처리합니다. ``notes``는 활성 노트,
+    ``chart_data``는 판정 시각순 차트 데이터입니다. 히트 신호보다 먼저
+    ``on_hit``을 호출하며, 놓침·매 프레임·제거 시 해당 선택적 훅을 호출합니다.
+    """
+    def __init__(self, game_context: MainGameView, song_data: dict, judgement_data: dict, is_bot_play: bool):
         self.game_context = game_context
         self.song_data = song_data
         self.pixels_per_ms = 0.45 * song_data["speed"]
@@ -125,6 +174,7 @@ class NoteManager:
         self.next_spawn_index = 0
         self.note_assets = {}
         self.note_settings = {}
+        self.note_scripts = {}
         self.chart_data = []
         self.judgement_windows = judgement_data
 
@@ -142,9 +192,21 @@ class NoteManager:
                     note_types.add(raw_note[3])
 
         for note_type in note_types:
-            self.note_settings[note_type] = self.game_context.assets.json(f"ui/notes/{note_type}/data.json")
+            self.game_context.assets._check_name(note_type)
+            self.note_settings[note_type] = self.game_context.assets.json(f"notes/{note_type}/data.json")
             if "penaly_note" in self.note_settings[note_type]:
-                raise ValueError(f"ui/notes/{note_type}/data.json: use 'penalty_note', not 'penaly_note'")
+                raise ValueError(f"notes/{note_type}/data.json: use 'penalty_note', not 'penaly_note'")
+
+            script_names = self.note_settings[note_type].get("scripts", [])
+            if not isinstance(script_names, list):
+                raise ValueError(f"notes/{note_type}/data.json: 'scripts' must be a list")
+            self.note_scripts[note_type] = []
+            for script_name in script_names:
+                if not isinstance(script_name, str):
+                    raise ValueError(f"notes/{note_type}/data.json: script names must be strings")
+                self.game_context.assets._check_name(script_name)
+                path = self.game_context.assets.path(f"scripts/notes/{script_name}.py")
+                self.note_scripts[note_type].append(runpy.run_path(str(path))["NoteScript"])
 
             self.note_assets[note_type] = {}
             for direction in ["left", "down", "up", "right"]:
@@ -198,7 +260,8 @@ class NoteManager:
             assets = self.note_assets[note_info["note_type"]][direction_name]
             target_receptor = self.game_context.receptor_mgr.receptors[note_info["direction_index"]]
 
-            new_note = Note(note_info, assets, target_receptor)
+            new_note = Note(note_info, assets, target_receptor, self.game_context,
+                            self.note_scripts[note_info["note_type"]])
             if new_note.sustain_length > 0:
                 new_note.create_sustain_tail(self)
 
@@ -216,6 +279,7 @@ class NoteManager:
                 note.pressed = True
                 note.is_hit = True
                 note.judgement = "auto"
+                note.run_scripts("on_hit")
                 if note.is_opponent:
                     on_opponent_pressed.send(self, direction_index=note.direction_index, note=note)
                 else:
@@ -256,11 +320,21 @@ class NoteManager:
                 sustain_list.draw()
 
     def on_key_press(self, direction_index: int):
+        """Attempt a hit in player lane 0-3 and emit ``on_note_pressed``.
+
+        플레이어 레인 0~3에서 판정을 시도하고 ``on_note_pressed``를 보냅니다.
+        """
         song_ms = self.game_context.song_mgr.song_ms
         note = self.process_hit(direction_index, song_ms)
+        if note:
+            note.run_scripts("on_hit")
         on_note_pressed.send(self, direction_index=direction_index, note=note)
 
     def on_key_release(self, direction_index: int):
+        """Release player lane 0-3 and mark a broken sustain as missed.
+
+        플레이어 레인 0~3을 놓고 롱 노트가 끊기면 미스로 처리합니다.
+        """
         song_ms = self.game_context.song_mgr.song_ms
         on_note_released.send(self, direction_index=direction_index)
 
@@ -268,6 +342,7 @@ class NoteManager:
             if not note.is_opponent and note.direction_index == direction_index and note.is_hit and not note.is_released_early and note.strum_time <= song_ms < note.strum_time + note.sustain_length:
                 note.is_released_early = True
                 note.set_visual_miss()
+                note.run_scripts("on_miss")
                 on_note_missed.send(self, note=note)
                 break
 
@@ -278,6 +353,7 @@ class NoteManager:
 
         for note in self.notes:
             note.update_position(song_ms, self.pixels_per_ms)
+            note.run_scripts("on_update", delta_time)
             if song_ms >= note.strum_time + note.sustain_length + REMOVE_DELAY_MS:
                 note.despawn()
             note.visible = not note.is_hit
@@ -286,6 +362,7 @@ class NoteManager:
                 if song_ms > note.strum_time + self.hit_window_ms:
                     note.is_miss = True
                     note.set_visual_miss()
+                    note.run_scripts("on_miss")
                     if note.must_hit_note:
                         on_note_missed.send(self, note=note)
 
@@ -297,3 +374,7 @@ class NoteManager:
     def draw(self):
         self.draw_sustains()
         self.notes.draw()
+
+    def on_hide_view(self):
+        for note in tuple(self.notes):
+            note.despawn()

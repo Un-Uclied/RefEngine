@@ -1,4 +1,7 @@
-"""Play note splash frames from an Adobe Animate XML atlas."""
+"""Play note splash frames from an Adobe Animate XML atlas.
+
+Adobe Animate XML 아틀라스에서 노트 스플래시 프레임을 읽어 재생합니다.
+"""
 import re
 from xml.etree import ElementTree
 
@@ -14,6 +17,15 @@ FRAME_NAME = re.compile(r"note splash (blue|green|purple|red) ([12])000([0-3])$"
 
 
 class SplashManager:
+    """Show a note splash at the matching receptor after a SICK hit.
+
+    ``sprites`` contains active splashes. ``animations`` maps
+    ``(color, variant)`` to a four-frame animation loaded from the XML atlas.
+
+    SICK 판정 시 해당 리셉터에 노트 스플래시를 표시합니다.
+    ``sprites``는 활성 스플래시 목록이고 ``animations``는 XML 아틀라스에서
+    읽은 4프레임 애니메이션을 ``(색상, 변형 번호)``로 찾는 매핑입니다.
+    """
     def __init__(self, game_context, splash_name, assets):
         self.game_context = game_context
         atlas_name = f"ui/splashes/{splash_name}/noteSplashes.xml"

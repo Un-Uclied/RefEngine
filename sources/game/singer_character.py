@@ -4,6 +4,15 @@ from .events import on_beat, on_note_pressed, on_note_released, on_opponent_pres
 IDLE_DELAY = .1
 
 class SingerCharacterManager:
+    """Own the player, opponent and optional sub-character sprites.
+
+    ``player`` and ``opponent`` are SingerCharacter objects. Note scripts choose
+    an animation through ``note.character_animation`` before this manager plays it.
+
+    플레이어와 상대, 선택적 보조 캐릭터를 관리합니다.
+    ``player``와 ``opponent``는 SingerCharacter 객체입니다. 노트 스크립트가
+    ``note.character_animation``을 정하면 이 매니저가 해당 애니메이션을 재생합니다.
+    """
     def __init__(self, game_context, song_data, background_data, assets):
         self.game_context = game_context
         # Spawn Player Character
@@ -38,6 +47,16 @@ class SingerCharacterManager:
         on_opponent_pressed.connect(self._note_pressed)
         on_opponent_released.connect(self._opponent_released)
 
+    def preload_textures(self):
+        """Yield after each animation is uploaded to the render-thread atlas.
+
+        렌더 스레드의 아틀라스에 애니메이션 하나를 올릴 때마다 제어를 돌려줍니다.
+        """
+        for character in self._character_spritelist:
+            for animation in character.loaded_animations.values():
+                self._character_spritelist.preload_textures(frame.texture for frame in animation.keyframes)
+                yield
+
     def on_hide_view(self):
         on_beat.disconnect(self._beat)
         on_note_pressed.disconnect(self._note_pressed)
@@ -49,15 +68,13 @@ class SingerCharacterManager:
         if note is None:
             return
 
-        anim = ["sing_left", "sing_down", "sing_up", "sing_right"][direction_index % 4]
+        anim = note.character_animation
+        if anim is None:
+            return
         if direction_index < 4:
-            if f"{anim}_alt" in self.player.loaded_animations and (getattr(note, "note_type", "") == "alt_animation" or (self.game_context.song_mgr.current_section_data or {}).get("altAnim", False)):
-                anim = f"{anim}_alt"
             self.player.play_animation(anim)
             self._should_player_go_idle = False
         if direction_index >= 4:
-            if f"{anim}_alt" in self.opponent.loaded_animations and (getattr(note, "note_type", "") == "alt_animation" or (self.game_context.song_mgr.current_section_data or {}).get("altAnim", False)):
-                anim = f"{anim}_alt"
             self.opponent.play_animation(anim)
             self._should_opponent_go_idle = False
             
@@ -100,6 +117,16 @@ class SingerCharacterManager:
         self._character_spritelist.draw()
 
 class SingerCharacter(arcade.TextureAnimationSprite):
+    """Animated character with named GIF animations from character data.json.
+
+    ``loaded_animations`` maps names to animations and ``current_animation_name``
+    identifies the one playing now. Use ``play_animation(name)`` to switch.
+
+    캐릭터 data.json의 이름 붙은 GIF 애니메이션을 재생합니다.
+    ``loaded_animations``에서 사용 가능한 이름을 확인하고
+    ``current_animation_name``으로 현재 이름을 읽을 수 있습니다.
+    전환할 때는 ``play_animation(name)``을 사용하세요.
+    """
     def __init__(self, name : str, assets, center_x : float, center_y : float, scale : float):
         self._data = assets.json(f"characters/{name}/data.json")
 
@@ -116,9 +143,17 @@ class SingerCharacter(arcade.TextureAnimationSprite):
 
     @property
     def camera_position(self):
+        """World-space Vec2 including this character's configured camera offset.
+
+        캐릭터 설정의 카메라 오프셋을 더한 월드 좌표 Vec2입니다.
+        """
         return arcade.Vec2(self.center_x + self._data["camera_offset"][0], self.center_y + self._data["camera_offset"][1])
 
     def play_animation(self, name : str):
+        """Switch to a loaded animation and apply its position offset.
+
+        로드된 애니메이션으로 전환하고 해당 위치 오프셋을 적용합니다.
+        """
         if not name in self.loaded_animations:
             print(f"Error: Animation '{name}' not found for character '{self.name}'")
             return

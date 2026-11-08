@@ -1,0 +1,29 @@
+{
+    "scale" : 0.65,
+    "must_hit_note" : true,
+    "penalty_note" : false,
+    "scripts" : ["no_animation"],
+
+    "paths" : {
+        "left" : {
+            "head" : "assets/notes/default/left.gif",
+            "hold" : "assets/notes/default/left_hold.png",
+            "end" : "assets/notes/default/left_end.png"
+        },
+        "up" : {
+            "head" : "assets/notes/default/up.gif",
+            "hold" : "assets/notes/default/up_hold.png",
+            "end" : "assets/notes/default/up_end.png"
+        },
+        "down" : {
+            "head" : "assets/notes/default/down.gif",
+            "hold" : "assets/notes/default/down_hold.png",
+            "end" : "assets/notes/default/down_end.png"
+        },
+        "right" : {
+            "head" : "assets/notes/default/right.gif",
+            "hold" : "assets/notes/default/right_hold.png",
+            "end" : "assets/notes/default/right_end.png"
+        }
+    }
+}

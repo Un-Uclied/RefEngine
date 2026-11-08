@@ -1,0 +1,28 @@
+{
+    "scale" : 0.65,
+    "must_hit_note" : false,
+    "penalty_note" : true,
+    "scripts" : ["section_alt", "flame_note"],
+    "paths" : {
+        "left" : {
+            "head" : "assets/notes/flame_note/left.png",
+            "hold" : "assets/notes/flame_note/hold.png",
+            "end" : "assets/notes/flame_note/end.png"
+        },
+        "up" : {
+            "head" : "assets/notes/flame_note/up.png",
+            "hold" : "assets/notes/flame_note/hold.png",
+            "end" : "assets/notes/flame_note/end.png"
+        },
+        "down" : {
+            "head" : "assets/notes/flame_note/down.png",
+            "hold" : "assets/notes/flame_note/hold.png",
+            "end" : "assets/notes/flame_note/end.png"
+        },
+        "right" : {
+            "head" : "assets/notes/flame_note/right.png",
+            "hold" : "assets/notes/flame_note/hold.png",
+            "end" : "assets/notes/flame_note/end.png"
+        }
+    }
+}

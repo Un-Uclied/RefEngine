@@ -33,7 +33,7 @@ class Application:
         arcade.load_font(str(BASE_ASSETS / "fonts/MBC 1961 M.ttf"))
         arcade.load_font(str(BASE_ASSETS / "fonts/Paperlogy-8ExtraBold.ttf"))
 
-        self.stage_view = MainGameView(sys.argv[1] if len(sys.argv) > 1 else "singularity")
+        self.stage_view = MenuView(sys.argv[1] if len(sys.argv) > 1 else None)
         
         self.window.show_view(self.stage_view)
         arcade.run()

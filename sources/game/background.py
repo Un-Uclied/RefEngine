@@ -2,6 +2,15 @@ import arcade
 
 
 class BackgroundManager:
+    """Own stage sprites defined in background data.json.
+
+    ``world_sprites`` move with the world camera; ``screen_sprites`` stay in
+    screen space. Song scripts may adjust their sprite positions and opacity.
+
+    배경 data.json에 정의된 스테이지 스프라이트를 관리합니다.
+    ``world_sprites``는 월드 카메라를 따라가고 ``screen_sprites``는 화면 좌표에
+    고정됩니다. 노래 스크립트에서 위치와 불투명도를 조절할 수 있습니다.
+    """
     def __init__(self, background_data, assets):
         self.assets = assets
         self.world_sprites = arcade.SpriteList()

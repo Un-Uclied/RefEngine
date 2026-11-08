@@ -15,14 +15,14 @@ class SongScriptTest(unittest.TestCase):
         song = SimpleNamespace(song_ms=250)
         effect = script(SimpleNamespace(character_mgr=SimpleNamespace(opponent=opponent), song_mgr=song))
         effect.on_update(1 / 60)
-        offset = math.sin(0.25 * math.tau * 0.7) * 28
+        offset = math.sin(0.25 * math.tau * 0.7) * 70
         self.assertAlmostEqual(opponent.center_y, 500 + offset)
         effect.on_update(1 / 60)
         self.assertAlmostEqual(opponent.center_y, 500 + offset)
         opponent.center_y += 12  # An animation changes its own offset.
         song.song_ms = 500
         effect.on_update(1 / 60)
-        self.assertAlmostEqual(opponent.center_y, 512 + math.sin(0.5 * math.tau * 0.7) * 28)
+        self.assertAlmostEqual(opponent.center_y, 512 + math.sin(0.5 * math.tau * 0.7) * 70)
         effect.on_hide()
         self.assertAlmostEqual(opponent.center_y, 512)
 
@@ -39,7 +39,7 @@ class SongScriptTest(unittest.TestCase):
             song_mgr=SimpleNamespace(song_ms=125, current_section_data={"altAnim": False}),
         )
         effect = script(game)
-        note = SimpleNamespace(note_type="alt_animation")
+        note = SimpleNamespace(character_animation="sing_left_alt")
         self.assertEqual(effect.note_move_multiplier(4, note), 1.8)
         self.assertEqual(effect.note_move_multiplier(0, note), 1.0)
         opponent.current_animation_name = "sing_left_alt"

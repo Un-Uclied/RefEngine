@@ -1,0 +1,28 @@
+{
+    "scale" : 0.65,
+    "must_hit_note" : false,
+    "penalty_note" : false,
+    "scripts" : ["section_alt"],
+    "paths" : {
+        "left" : {
+            "head" : "assets/notes/jewel_note/left.png",
+            "hold" : "assets/notes/jewel_note/hold.png",
+            "end" : "assets/notes/jewel_note/end.png"
+        },
+        "up" : {
+            "head" : "assets/notes/jewel_note/up.png",
+            "hold" : "assets/notes/jewel_note/hold.png",
+            "end" : "assets/notes/jewel_note/end.png"
+        },
+        "down" : {
+            "head" : "assets/notes/jewel_note/down.png",
+            "hold" : "assets/notes/jewel_note/hold.png",
+            "end" : "assets/notes/jewel_note/end.png"
+        },
+        "right" : {
+            "head" : "assets/notes/jewel_note/right.png",
+            "hold" : "assets/notes/jewel_note/hold.png",
+            "end" : "assets/notes/jewel_note/end.png"
+        }
+    }
+}

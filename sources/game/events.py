@@ -1,4 +1,15 @@
-"""Public game signals. Receivers take (sender, **listed keyword arguments)."""
+"""Public Blinker signals for scripts and managers.
+
+Receivers take ``(sender, **event_values)``. Step/beat events provide their
+index and ``ms``. Player and opponent press events provide ``direction_index``
+and ``note`` (None for an empty player press); release events provide the lane
+index. A miss provides ``note``. Disconnect a script's receivers when it ends.
+
+스크립트와 매니저가 사용하는 Blinker 신호입니다. 수신 함수는
+``(sender, **event_values)``를 받습니다. 스텝/비트에는 번호와 밀리초 단위
+``ms``가, 노트 입력에는 ``direction_index``와 ``note``가 전달됩니다.
+빈 플레이어 입력의 ``note``는 None입니다. 스크립트가 끝나면 연결을 해제하세요.
+"""
 from blinker import Signal
 
 

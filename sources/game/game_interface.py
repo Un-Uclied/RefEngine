@@ -11,6 +11,10 @@ NAME_FONT_SIZE = 18
 TIME_FONT_SIZE = 14
 
 class TimebarInterface:
+    """Display the current song name, playback time and progress bar.
+
+    현재 노래 이름, 재생 시간과 진행 막대를 표시합니다.
+    """
     def __init__(self, game_context, song_name):
         self.game_context = game_context
         self._time_bar_bg = arcade.SpriteSolidColor(BAR_WIDTH, BAR_HEIGHT, arcade.get_window().width/2, arcade.get_window().height - BAR_Y, arcade.color.BLACK)
@@ -48,6 +52,10 @@ class TimebarInterface:
         self._time_bar_time_text.draw()
 
 class ScoreInterface:
+    """Display score, accuracy and the bot-play indicator.
+
+    점수, 정확도와 자동 플레이 표시를 그립니다.
+    """
     def __init__(self, game_context):
         self.game_context = game_context
         self._score_text    = arcade.Text("Score : 0", 400, 25, arcade.color.WHITE, font_name="Paperlogy 8")
@@ -68,6 +76,10 @@ class ScoreInterface:
             self._bot_play_text.draw()
 
 class HealthInterface:
+    """Display the player health bar and character icons.
+
+    플레이어 체력 막대와 캐릭터 아이콘을 표시합니다.
+    """
     def __init__(self, game_context, song_data, assets):
         self.game_context = game_context
         self.bg                     = arcade.SpriteSolidColor(500, 30, arcade.get_window().width/2, 60, arcade.color.BLACK)
@@ -149,6 +161,10 @@ class HealthInterface:
         self._sprites.draw()
 
 class JudgementInterface:
+    """Display and animate the most recent hit judgement.
+
+    가장 최근 히트 판정 문구를 표시하고 애니메이션합니다.
+    """
     def __init__(self):
         self._judgement_sprite = None
         self._prev_judgement = None
@@ -177,6 +193,15 @@ class JudgementInterface:
         self._sprite_list.draw()
 
 class GameInterfaceManager:
+    """Own HUD elements: ``_timebar``, ``_score``, ``_health`` and ``_judgement``.
+
+    Prefer changing ``game.score_mgr.health`` or score events from scripts so
+    HUD values and icons stay in sync.
+
+    HUD의 시간·점수·체력·판정 요소를 관리합니다.
+    스크립트에서는 ``game.score_mgr.health``나 점수 이벤트를 통해 값을 바꾸면
+    HUD 수치와 아이콘이 함께 갱신됩니다.
+    """
     def __init__(self, game_context, song_data, assets):
         self._data = song_data
         self._sprites = arcade.SpriteList()

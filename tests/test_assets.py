@@ -16,6 +16,7 @@ class AssetStoreTest(unittest.TestCase):
     def test_misspelled_penalty_setting_is_rejected(self):
         manager = NoteManager.__new__(NoteManager)
         manager.game_context = SimpleNamespace(assets=SimpleNamespace(
+            _check_name=assets.AssetStore._check_name,
             json=lambda path: {"penaly_note": True},
         ))
         manager.song_data = {"notes": []}
@@ -30,20 +31,20 @@ class AssetStoreTest(unittest.TestCase):
             self.assertTrue(root.resolve().is_relative_to(assets.PROJECT_ROOT.resolve()))
             base = root / "assets"
             mod = root / "mods" / "demo" / "assets"
-            (base / "ui/notes/default").mkdir(parents=True)
-            (mod / "ui/notes/default").mkdir(parents=True)
-            (base / "ui/notes/default/data.json").write_text('{"value": "base"}')
-            (mod / "ui/notes/default/data.json").write_text('{"value": "mod"}')
-            (base / "ui/notes/default/left.png").touch()
-            (mod / "ui/notes/default/right.png").touch()
+            (base / "notes/default").mkdir(parents=True)
+            (mod / "notes/default").mkdir(parents=True)
+            (base / "notes/default/data.json").write_text('{"value": "base"}')
+            (mod / "notes/default/data.json").write_text('{"value": "mod"}')
+            (base / "notes/default/left.png").touch()
+            (mod / "notes/default/right.png").touch()
             with patch.object(assets, "BASE_ASSETS", base), patch.object(assets, "MODS_ROOT", root / "mods"):
                 store, song = assets.AssetStore.for_song("demo:track")
                 self.assertEqual(song, "track")
-                self.assertEqual(store.json("ui/notes/default/data.json"), {"value": "mod"})
-                self.assertEqual(store.path("assets/ui/notes/default/left.png"), base / "ui/notes/default/left.png")
-                self.assertEqual(store.path("assets/ui/notes/default/right.png"), mod / "ui/notes/default/right.png")
+                self.assertEqual(store.json("notes/default/data.json"), {"value": "mod"})
+                self.assertEqual(store.path("assets/notes/default/left.png"), base / "notes/default/left.png")
+                self.assertEqual(store.path("assets/notes/default/right.png"), mod / "notes/default/right.png")
                 with patch("arcade.load_texture", return_value=object()) as load:
-                    self.assertIs(store.image("ui/notes/default/right.png"), store.image("assets/ui/notes/default/right.png"))
+                    self.assertIs(store.image("notes/default/right.png"), store.image("assets/notes/default/right.png"))
                     load.assert_called_once()
                 with self.assertRaises(ValueError):
                     store.path("../secret")

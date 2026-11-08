@@ -5,29 +5,74 @@ from sources.game import *
 from sources.assets import AssetStore
 
 class MainGameView(arcade.View):
+    """Active song view and entry point for SongScript and NoteScript ``game``.
+
+    Public manager attributes are ready before song scripts are constructed and
+    before note instances spawn. ``assets`` uses the selected mod's overrides.
+
+    SongScript와 NoteScript에 전달되는 ``game`` 객체입니다.
+    공개 매니저 속성은 노래 스크립트 생성과 노트 스폰 전에 준비됩니다.
+    ``assets``는 선택한 모드의 덮어쓰기를 적용합니다.
+    """
     current : 'MainGameView' = None
 
-    def __init__(self, song_name):
+    def __init__(self, song_name, prepared=None):
         super().__init__()
-
-        self.assets, song_name = AssetStore.for_song(song_name)
-        self._song_data = self.assets.json(f"songs/{song_name}/data.json")
-        self._score_data = self.assets.json("config/score.json")
-        self._background_data = self.assets.json(f"backgrounds/{self._song_data['background']}/data.json")
-        self._judgement_data = self.assets.json("config/judgements.json")
+        self.character_mgr: SingerCharacterManager
+        self.receptor_mgr: ReceptorManager
+        self.note_mgr: NoteManager
+        self.splash_mgr: SplashManager
+        self.song_mgr: SongManager
+        self.score_mgr: ScoreManager
+        self.camera_mgr: CameraManager
+        self.background_mgr: BackgroundManager
+        self.game_interface_mgr: GameInterfaceManager
+        self._ready = False
+        self._fade_alpha = 0
+        self._sounds = None
+        if prepared is None:
+            self.assets, song_name = AssetStore.for_song(song_name)
+            self._song_data = self.assets.json(f"songs/{song_name}/data.json")
+            self._score_data = self.assets.json("config/score.json")
+            self._background_data = self.assets.json(f"backgrounds/{self._song_data['background']}/data.json")
+            self._judgement_data = self.assets.json("config/judgements.json")
+        else:
+            (self.assets, song_name, self._song_data, self._score_data,
+             self._background_data, self._judgement_data, self._sounds) = prepared
 
     def on_show_view(self):
         MainGameView.current = self
-        
+        if not self._ready:
+            for _ in self.load_steps():
+                pass
+            self.on_draw()
+            self._ready = True
+        if self._fade_alpha == 0:
+            self.song_mgr.play()
+        return super().on_show_view()
+
+    def load_steps(self):
+        """Build managers on the render thread, yielding labels for the loading UI.
+
+        렌더 스레드에서 매니저를 단계별로 만들고 로딩 화면에 표시할 이름을 내보냅니다.
+        """
         self.character_mgr  = SingerCharacterManager(self, self._song_data, self._background_data, self.assets)
+        yield "Characters"
+        for _ in self.character_mgr.preload_textures():
+            yield "Character textures"
         self.receptor_mgr   = ReceptorManager(self, self._song_data["receptor_name"], self.assets)
+        yield "Receptors"
         self.note_mgr       = NoteManager(self, self._song_data, self._judgement_data, is_bot_play=False)
+        yield "Notes"
         self.splash_mgr     = SplashManager(self, self._song_data["splash_name"], self.assets)
-        self.song_mgr       = SongManager(self._song_data, self.assets)
+        yield "Splashes"
+        self.song_mgr       = SongManager(self._song_data, self.assets, self._sounds)
+        yield "Music"
         self.score_mgr      = ScoreManager(self._score_data)
         self.camera_mgr     = CameraManager(self, self._song_data, self._background_data)
         self.background_mgr = BackgroundManager(self._background_data, self.assets)
         self.game_interface_mgr = GameInterfaceManager(self, self._song_data, self.assets)
+        yield "Scene"
         script_names = self._song_data.get("scripts")
         if script_names is None:
             script_names = [self._song_data["script"]] if self._song_data.get("script") else []
@@ -40,28 +85,31 @@ class MainGameView(arcade.View):
             self.assets._check_name(script_name)
             script = runpy.run_path(str(self.assets.path(f"scripts/{script_name}.py")))["SongScript"]
             self.song_scripts.append(script(self))
-
-        self.song_mgr.play()
-
+        yield "Scripts"
         self._start_pos = arcade.get_window().get_location()
-
-        return super().on_show_view()
     
     def on_hide_view(self):
         self.song_mgr.stop()
         for script in reversed(self.song_scripts):
             if hasattr(script, "on_hide"):
                 script.on_hide()
+        self.note_mgr.on_hide_view()
         self.character_mgr.on_hide_view()
         self.receptor_mgr.on_hide_view()
         self.splash_mgr.on_hide_view()
         self.score_mgr.on_hide_view()
         self.camera_mgr.on_hide_view()
         self.game_interface_mgr.on_hide_view()
+        self._ready = False
     
         return super().on_hide_view()
 
     def on_update(self, delta_time):
+        if self._fade_alpha:
+            self._fade_alpha = max(0, self._fade_alpha - delta_time * 850)
+            if not self._fade_alpha:
+                self.song_mgr.play()
+            return
         self.song_mgr.update()
         self.note_mgr.update(delta_time)
         self.splash_mgr.update(delta_time)
@@ -92,6 +140,9 @@ class MainGameView(arcade.View):
             self.splash_mgr.draw()
         
         arcade.draw_text(f"FPS : {math.floor(arcade.get_fps())}", 20, arcade.get_window().height - 20, arcade.color.GREEN, 24, bold=False)
+        if self._fade_alpha:
+            window = arcade.get_window()
+            arcade.draw_lbwh_rectangle_filled(0, 0, window.width, window.height, (0, 0, 0, int(self._fade_alpha)))
 
     def on_key_press(self, key, modifiers):
         if key in (arcade.key.MINUS, arcade.key.NUM_SUBTRACT):
