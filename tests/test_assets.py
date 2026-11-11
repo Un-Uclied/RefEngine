@@ -62,8 +62,13 @@ class AssetStoreTest(unittest.TestCase):
             chart = json.loads((assets.BASE_ASSETS / "songs/endless-D/data.json").read_text(encoding="utf-8"))
             chart["name"] = "Modded test"
             song_path.write_text(json.dumps(chart), encoding="utf-8")
+            chart_path = song_path.parent / "chart.json"
+            mod_chart = json.loads((assets.BASE_ASSETS / "songs/endless-D/chart.json").read_text(encoding="utf-8"))
+            mod_chart["speed"] = 4.2
+            chart_path.write_text(json.dumps(mod_chart), encoding="utf-8")
             with patch.object(assets, "MODS_ROOT", root):
                 view = MainGameView("demo:endless-D")
                 self.assertEqual(view._song_data["name"], "Modded test")
+                self.assertEqual(view._song_data["speed"], 4.2)
                 self.assertEqual(view._background_data["default_zoom"], 0.5)
             self.assertEqual(MainGameView("test")._song_data["name"], "test")

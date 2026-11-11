@@ -28,7 +28,7 @@ python run.py
 | `run.py` | 창 생성과 메뉴 시작 |
 | `sources/views/` | 곡 선택, 로딩, 게임 화면 |
 | `sources/game/` | 노트·캐릭터·카메라·점수 등 게임 매니저와 이벤트 |
-| `assets/songs/` | 기본 곡 차트와 `Inst.ogg`·`Voices.ogg` |
+| `assets/songs/` | 곡별 `data.json`·`chart.json`과 `Inst.ogg`·`Voices.ogg` |
 | `assets/notes/` | 노트 종류별 설정과 이미지 |
 | `assets/scripts/` | 기본 노래 스크립트와 `notes/`의 노트 스크립트 |
 | `assets/shaders/` | 곡별 화면 효과의 GLSL 파일 |
@@ -36,12 +36,13 @@ python run.py
 
 ## 모딩
 
-모드는 `mods/<mod_id>/assets/` 아래에 기본 `assets/`와 같은 경로로 놓습니다. 같은 경로의 파일이 있으면 모드 파일이 우선하고, 없으면 기본 애셋을 사용합니다. 곡은 메뉴에 `mod_id:song_id`로 나타납니다.
+곡 메타데이터와 차트 형식은 [곡 템플릿](assets/songs/README.md)을 참고하세요. 모드는 `mods/<mod_id>/assets/` 아래에 기본 `assets/`와 같은 경로로 놓습니다. 같은 경로의 파일이 있으면 모드 파일이 우선하고, 없으면 기본 애셋을 사용합니다. 곡은 메뉴에 `mod_id:song_id`로 나타납니다.
 
 ```text
 mods/demo/assets/
 ├─ songs/track/
 │  ├─ data.json
+│  ├─ chart.json
 │  ├─ Inst.ogg
 │  └─ Voices.ogg
 ├─ notes/my_note/data.json
@@ -51,7 +52,8 @@ mods/demo/assets/
 
 - 곡의 `data.json`에서 `"scripts": ["my_song"]`으로 `SongScript(game)`를 지정합니다.
 - 노트의 `data.json`에서 `"scripts": ["my_effect"]`로 `NoteScript(game, note)`를 지정합니다. 각 노트는 자기 스크립트 인스턴스를 가집니다.
-- 곡의 `data.json`에서 `"shaders": [{"name": "my_effect", "uniforms": {"strength": 0.2}}]`로 전체 화면 효과를 지정합니다. `assets/shaders/my_effect.frag`는 모드에서 덮어쓸 수 있습니다.
+- 곡의 `data.json`에서 `"shaders": [{"name": "my_effect", "uniforms": {"strength": 0.2}}]`로 전체 화면 효과를 지정합니다. `assets/shaders/my_effect.frag`는 모드에서 덮어쓸 수 있고, 실행 중에는 `game.shader_mgr.set_uniform(...)`으로 값을 바꿀 수 있습니다.
+- 세 기본 곡 모두 재사용 가능한 `beat_zoom` SongScript를 사용합니다. 새 곡에도 `"scripts": ["beat_zoom"]`을 추가할 수 있습니다.
 - [한국어 모딩 가이드](mods/README.ko.md)와 [English modding guide](mods/README.md)에 차트 형식, 필수 파일, 스크립트 예제와 이벤트가 있습니다. 매니저·노트 API는 코드의 영어/한국어 docstring에서도 확인할 수 있습니다.
 
 ### GIF 캐릭터 생성기

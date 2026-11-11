@@ -7,6 +7,7 @@ from queue import Empty, SimpleQueue
 
 import arcade
 
+from sources.fonts import FONT_NAME
 from sources.assets import AssetStore, BASE_ASSETS, MODS_ROOT
 from .main_game import MainGameView
 
@@ -30,7 +31,7 @@ def available_songs():
 
 def prepare_song(song_id, report):
     assets, name = AssetStore.for_song(song_id)
-    song = assets.json(f"songs/{name}/data.json")
+    song = assets.song(name)
     score = assets.json("config/score.json")
     background = assets.json(f"backgrounds/{song['background']}/data.json")
     judgements = assets.json("config/judgements.json")
@@ -58,8 +59,8 @@ def prepare_song(song_id, report):
         assets.image(path)
         report(0.05 + 0.7 * index / len(paths), f"Images {index}/{len(paths)}")
     sounds = (
-        arcade.load_sound(str(assets.path(song["inst_path"]))),
-        arcade.load_sound(str(assets.path(song["voices_path"]))),
+        arcade.load_sound(str(assets.path(song["inst"]))),
+        arcade.load_sound(str(assets.path(song["voices"]))),
     )
     if any(sound is None for sound in sounds):
         raise ValueError(f"Could not load audio for {song_id}")
@@ -72,9 +73,9 @@ class MenuView(arcade.View):
         super().__init__()
         self.songs = available_songs()
         self.selected = next((i for i, song in enumerate(self.songs) if song[0] == initial_song), 0)
-        self.title = arcade.Text("REFENGINE / SONG SELECT", 100, 610, arcade.color.WHITE, 28)
-        self.hint = arcade.Text("UP / DOWN  SELECT     ENTER  START", 100, 570, arcade.color.LIGHT_GRAY, 16)
-        self.start_text = arcade.Text("START", 990, 90, arcade.color.WHITE, 22, anchor_x="center", anchor_y="center")
+        self.title = arcade.Text("REFENGINE / SONG SELECT", 100, 610, arcade.color.WHITE, 28, font_name=FONT_NAME)
+        self.hint = arcade.Text("UP / DOWN  SELECT     ENTER  START", 100, 570, arcade.color.LIGHT_GRAY, 16, font_name=FONT_NAME)
+        self.start_text = arcade.Text("START", 990, 90, arcade.color.WHITE, 22, font_name=FONT_NAME, anchor_x="center", anchor_y="center")
 
     def on_draw(self):
         self.clear(color=(35, 35, 35))
@@ -85,7 +86,7 @@ class MenuView(arcade.View):
             index = first + row
             y = 495 - row * 55
             arcade.draw_lbwh_rectangle_filled(100, y, 790, 45, (90, 90, 90) if index == self.selected else (55, 55, 55))
-            arcade.draw_text(f"{name}   [{song_id}]", 115, y + 12, arcade.color.WHITE, 16)
+            arcade.draw_text(f"{name}   [{song_id}]", 115, y + 12, arcade.color.WHITE, 16, font_name=FONT_NAME)
         arcade.draw_lbwh_rectangle_filled(870, 65, 240, 55, (100, 100, 100))
         self.start_text.draw()
 
@@ -125,8 +126,8 @@ class LoadingView(arcade.View):
         self._steps = None
         self._game = None
         self._fade = 0.0
-        self.title = arcade.Text(f"LOADING  {song_id}", 100, 400, arcade.color.WHITE, 28)
-        self.status_text = arcade.Text("Starting", 100, 340, arcade.color.LIGHT_GRAY, 16)
+        self.title = arcade.Text(f"LOADING  {song_id}", 100, 400, arcade.color.WHITE, 28, font_name=FONT_NAME)
+        self.status_text = arcade.Text("Starting", 100, 340, arcade.color.LIGHT_GRAY, 16, font_name=FONT_NAME)
 
     def on_show_view(self):
         self._executor = ThreadPoolExecutor(max_workers=1)
@@ -197,8 +198,8 @@ class LoadingView(arcade.View):
         arcade.draw_lbwh_rectangle_filled(100, 55, 1080, 18, (65, 65, 65))
         arcade.draw_lbwh_rectangle_filled(100, 55, 1080 * self.progress, 18, arcade.color.WHITE)
         if self.error:
-            arcade.draw_text(f"Load failed: {self.error}", 100, 285, arcade.color.RED, 16)
-            arcade.draw_text("Press ESC to return", 100, 250, arcade.color.WHITE, 16)
+            arcade.draw_text(f"Load failed: {self.error}", 100, 285, arcade.color.RED, 16, font_name=FONT_NAME)
+            arcade.draw_text("Press ESC to return", 100, 250, arcade.color.WHITE, 16, font_name=FONT_NAME)
         if self._fade:
             arcade.draw_lbwh_rectangle_filled(0, 0, self.window.width, self.window.height, (0, 0, 0, int(self._fade)))
 

@@ -1,5 +1,7 @@
 import math, arcade
 
+from sources.fonts import FONT_NAME
+
 from .events import on_score_changed, on_beat, on_note_pressed
 
 BAR_WIDTH = 400
@@ -21,9 +23,9 @@ class TimebarInterface:
         self._time_bar_fg = arcade.SpriteSolidColor(BAR_WIDTH-2, BAR_HEIGHT-2, arcade.get_window().width/2, arcade.get_window().height - BAR_Y, arcade.color.WHITE)
         
         self._time_bar_name_text = arcade.Text(f"< {song_name} >", arcade.get_window().width/2, arcade.get_window().height - NAME_Y,
-                                            arcade.color.WHITE, NAME_FONT_SIZE, font_name="Paperlogy 8", align="center", anchor_x="center", anchor_y="center")
+                                            arcade.color.WHITE, NAME_FONT_SIZE, font_name=FONT_NAME, align="center", anchor_x="center", anchor_y="center")
         self._time_bar_time_text = arcade.Text("| 0:00 |", arcade.get_window().width/2, arcade.get_window().height - TIME_Y,
-                                            arcade.color.WHITE, TIME_FONT_SIZE, font_name="Paperlogy 8", align="center", anchor_x="center", anchor_y="center")
+                                            arcade.color.WHITE, TIME_FONT_SIZE, font_name=FONT_NAME, align="center", anchor_x="center", anchor_y="center")
 
         self._bar_sprites = arcade.SpriteList()
         self._bar_sprites.append(self._time_bar_bg)
@@ -58,9 +60,9 @@ class ScoreInterface:
     """
     def __init__(self, game_context):
         self.game_context = game_context
-        self._score_text    = arcade.Text("Score : 0", 400, 25, arcade.color.WHITE, font_name="Paperlogy 8")
-        self._accuracy_text = arcade.Text("Accuracy : 100%", 400, 5, arcade.color.WHITE, font_name="Paperlogy 8")
-        self._bot_play_text = arcade.Text("[ BOT PLAY ENABLED ]", arcade.get_window().width/2, arcade.get_window().height - 120, arcade.color.RED, font_name="Paperlogy 8", anchor_x="center", anchor_y="center", align="center", font_size=20)
+        self._score_text    = arcade.Text("Score : 0", 400, 25, arcade.color.WHITE, font_name=FONT_NAME)
+        self._accuracy_text = arcade.Text("Accuracy : 100%", 400, 5, arcade.color.WHITE, font_name=FONT_NAME)
+        self._bot_play_text = arcade.Text("[ BOT PLAY ENABLED ]", arcade.get_window().width/2, arcade.get_window().height - 120, arcade.color.RED, font_name=FONT_NAME, anchor_x="center", anchor_y="center", align="center", font_size=20)
 
         on_score_changed.connect(self._score_updated)
 
@@ -178,7 +180,7 @@ class JudgementInterface:
             return
         if not note.judgement == self._prev_judgement:
             self._sprite_list.clear()
-            self._judgement_sprite = arcade.create_text_sprite(note.judgement.upper(), arcade.color.WHITE, font_size=24, font_name="Paperlogy 8", bold=True, background_color=arcade.color.TRANSPARENT_BLACK)
+            self._judgement_sprite = arcade.create_text_sprite(note.judgement.upper(), arcade.color.WHITE, font_size=24, font_name=FONT_NAME, bold=True, background_color=arcade.color.TRANSPARENT_BLACK)
             self._sprite_list.append(self._judgement_sprite)
             self._judgement_sprite.position = (arcade.get_window().width / 2, arcade.get_window().height - 100)
     

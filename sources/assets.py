@@ -82,6 +82,15 @@ class AssetStore:
             except json.JSONDecodeError as error:
                 raise ValueError(f"Invalid JSON in {path}: {error}") from error
 
+    def song(self, name):
+        """Load song metadata and its chart through the same mod lookup.
+
+        모드 우선순위에 따라 곡 정보와 차트를 함께 읽습니다.
+        """
+        data = self.json(f"songs/{name}/data.json")
+        chart = self.json(data["chart"])
+        return {**data, **{key: chart[key] for key in ("bpm", "speed", "notes")}}
+
     def image(self, name):
         """Return a cached Texture or TextureAnimation for a PNG or GIF.
 

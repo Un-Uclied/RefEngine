@@ -10,6 +10,7 @@ Mods override built-in assets without changing the engine. Create `mods/<mod_id>
 mods/demo/assets/
 ├─ songs/track/
 │  ├─ data.json
+│  ├─ chart.json
 │  ├─ Inst.ogg
 │  └─ Voices.ogg
 ├─ notes/my_note/data.json
@@ -25,33 +26,40 @@ The menu lists built-in songs and `mod_id:song_id` entries found under `mods/*/a
 
 ## 2. Song data and chart
 
-Copy an existing song's `data.json` when you need its full chart. This is a small valid example using built-in characters, stage, receptors and splashes:
+Song metadata lives in `data.json`; timing and notes live in the referenced `chart.json`. Use [the song template](../assets/songs/README.md). Example:
+
+`data.json`:
 
 ```json
 {
   "name": "track",
+  "description": "My song",
+  "inst": "assets/songs/track/Inst.ogg",
+  "voices": "assets/songs/track/Voices.ogg",
+  "chart": "assets/songs/track/chart.json",
   "player_name": "null",
   "opponent_name": "crovan",
   "sub_character_name": null,
   "background": "crovan_stage",
   "receptor_name": "default",
   "splash_name": "default",
-  "inst_path": "assets/songs/track/Inst.ogg",
-  "voices_path": "assets/songs/track/Voices.ogg",
+  "scripts": ["beat_zoom", "my_song"],
+  "shaders": []
+}
+
+```
+
+`chart.json`:
+
+```json
+{
   "bpm": 120,
   "speed": 1.6,
-  "scripts": ["my_song"],
-  "notes": [
-    {
-      "lengthInSteps": 16,
-      "mustHitSection": true,
-      "sectionNotes": [
-        [500, 0, 0],
-        [1000, 1, 0],
-        [1500, 2, 0, "my_note"]
-      ]
-    }
-  ]
+  "notes": [{
+    "lengthInSteps": 16,
+    "mustHitSection": true,
+    "sectionNotes": [[500, 0, 0], [1000, 1, 0], [1500, 2, 0, "my_note"]]
+  }]
 }
 ```
 
@@ -110,7 +118,7 @@ class SongScript:
         self.game.camera_mgr.shake_offset = arcade.Vec2()
 ```
 
-The `game` object exposes `assets`, `song_mgr`, `note_mgr`, `character_mgr`, `receptor_mgr`, `camera_mgr`, `score_mgr`, `background_mgr`, `splash_mgr` and `game_interface_mgr`. Manager docstrings describe units and script-facing fields. Type imports inside `if TYPE_CHECKING:` enable editor completion without a runtime circular import. Built-in reusable examples are `assets/scripts/alt_camera.py` and `opponent_float.py`.
+The `game` object exposes `assets`, `song_mgr`, `note_mgr`, `character_mgr`, `receptor_mgr`, `camera_mgr`, `shader_mgr`, `score_mgr`, `background_mgr`, `splash_mgr` and `game_interface_mgr`. Manager docstrings describe units and script-facing fields. Type imports inside `if TYPE_CHECKING:` enable editor completion without a runtime circular import. Built-in reusable examples are `assets/scripts/alt_camera.py`, `opponent_float.py` and `beat_zoom.py`. All built-in songs list `beat_zoom`; add it to a mod song's `scripts` list to use the same beat pulse.
 
 Signals are defined in `sources/game/events.py`. A receiver takes `(sender, **event_values)`; disconnect it in `on_hide()` when you connect it yourself.
 
@@ -134,17 +142,22 @@ For custom SICK splashes, set `splash_name` and place `noteSplashes.xml` plus th
 
 ## 6. Fullscreen shaders
 
-Add an ordered `shaders` list to a song's `data.json`. Songs without this field render normally. Singularity uses `chromatic_aberration`, `vignette` and `lens_distortion` as an example:
+Add an ordered `shaders` list to a song's `data.json`. Songs without this field render normally. Singularity uses these six effects:
 
 ```json
 "shaders": [
-  {"name": "chromatic_aberration", "uniforms": {"strength": 0.003}},
-  {"name": "vignette", "uniforms": {"strength": 0.55, "radius": 0.75, "softness": 0.4}},
-  {"name": "lens_distortion", "uniforms": {"strength": 0.12}}
+  {"name": "chromatic_aberration", "uniforms": {"strength": 0.01}},
+  {"name": "vignette", "uniforms": {"strength": 0.75, "radius": 0.65, "softness": 0.4}},
+  {"name": "lens_distortion", "uniforms": {"strength": 0.05}},
+  {"name": "vhs", "uniforms": {"scanline_strength": 0.22, "noise_strength": 0.035, "jitter_strength": 0.002}},
+  {"name": "bloom", "uniforms": {"strength": 0.55, "threshold": 0.68, "radius": 5.0}},
+  {"name": "seasick", "uniforms": {"strength": 0.009, "waves": 5.0, "speed": 2.0, "cycle_speed": 1.4}}
 ]
 ```
 
-Each name loads `assets/shaders/<name>.frag`; a file in `mods/demo/assets/shaders/` with the same name replaces the built-in one. To add an effect, create a new `.frag` file and list its name in the song. The engine supplies GLSL 330 vertex output `in vec2 uv` (0–1 screen coordinates) and binds the preceding image to `uniform sampler2D u_texture` at texture unit 0. Declare `out vec4 fragColor` and write each output pixel. Put numeric shader parameters in `uniforms`, with matching GLSL uniform names. Effects run in array order over the whole game view, including HUD and notes. The final fade is drawn afterward.
+Each name loads `assets/shaders/<name>.frag`; a file in `mods/demo/assets/shaders/` with the same name replaces the built-in one. To add an effect, create a new `.frag` file and list its name in the song. The engine supplies GLSL 330 vertex output `in vec2 uv` (0–1 screen coordinates) and binds the preceding image to `uniform sampler2D u_texture` at texture unit 0. Declare `out vec4 fragColor` and write each output pixel. Put numeric shader parameters in `uniforms`, with matching GLSL uniform names. Optional `u_time` is song time in seconds; optional `u_resolution` is framebuffer size in pixels. The engine controls these three `u_*` uniforms. Effects run in array order over the whole game view, including HUD and notes. The final fade is drawn afterward.
+
+During play, a `SongScript` or `NoteScript` can change a value without recompiling the shader: `game.shader_mgr.set_uniform("lens_distortion", "strength", 0.2)`. Read it with `game.shader_mgr.get_uniform("lens_distortion", "strength")`. The same name updates every instance of that shader in the song. `shader_mgr` is `None` when a song has no `shaders` field. VHS controls scanline darkness, grain and horizontal jitter; bloom controls glow strength, brightness threshold (0–1) and sample radius in pixels; seasick controls horizontal wave strength in UV units, wave count, motion speed and the distortion pulse speed.
 
 ## 7. Check your mod
 

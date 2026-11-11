@@ -29,9 +29,7 @@ class Application:
 
         # arcade.resources.add_resource_handle("")
 
-        arcade.load_font(str(BASE_ASSETS / "fonts/NanumBarunGothic-YetHangul.ttf"))
-        arcade.load_font(str(BASE_ASSETS / "fonts/MBC 1961 M.ttf"))
-        arcade.load_font(str(BASE_ASSETS / "fonts/Paperlogy-8ExtraBold.ttf"))
+        arcade.load_font(str(BASE_ASSETS / "fonts/SeoulAlrimTTF-Heavy.ttf"))
 
         self.stage_view = MenuView(sys.argv[1] if len(sys.argv) > 1 else None)
         

@@ -24,6 +24,7 @@ class PostProcessManager:
         self.ctx = arcade.get_window().ctx
         self.geometry = arcade.gl.geometry.quad_2d_fs()
         self.effects = []
+        self._by_name = {}
         self._textures = []
         self._buffers = []
         self._size = None
@@ -45,10 +46,24 @@ class PostProcessManager:
                 for key, value in uniforms.items():
                     if not isinstance(key, str) or not isinstance(value, (int, float, list)):
                         raise ValueError(f"Invalid uniform {key!r} for shader {name!r}")
+                    if key in ("u_texture", "u_time", "u_resolution"):
+                        raise ValueError(f"Uniform {key!r} is managed by the engine")
                     program[key] = value
             except Exception as error:
                 raise ValueError(f"Shader {name!r} ({path}): {error}") from error
             self.effects.append(program)
+            self._by_name.setdefault(name, []).append(program)
+
+    def set_uniform(self, effect_name: str, uniform: str, value):
+        """Change every matching shader instance during play. / 재생 중 셰이더 값을 바꿉니다."""
+        if uniform in ("u_texture", "u_time", "u_resolution"):
+            raise ValueError(f"Uniform {uniform!r} is managed by the engine")
+        for program in self._by_name[effect_name]:
+            program[uniform] = value
+
+    def get_uniform(self, effect_name: str, uniform: str):
+        """Read the current uniform value. / 현재 셰이더 값을 읽습니다."""
+        return self._by_name[effect_name][0][uniform]
 
     def _ensure_buffers(self):
         size = arcade.get_window().get_framebuffer_size()
@@ -72,9 +87,11 @@ class PostProcessManager:
         self._buffers[0].use()
         self._buffers[0].clear(color=(0, 0, 0, 255))
 
-    def finish(self):
+    def finish(self, time_seconds=0.0):
         """Apply effects in order and present. / 순서대로 효과를 적용합니다."""
         for index, program in enumerate(self.effects):
+            program.set_uniform_safe("u_time", time_seconds)
+            program.set_uniform_safe("u_resolution", self._size)
             target = (index + 1) % 2
             if index == len(self.effects) - 1:
                 self.ctx.screen.use()
@@ -93,4 +110,5 @@ class PostProcessManager:
             program.delete()
         self._buffers.clear()
         self._textures.clear()
+        self._by_name.clear()
         self._size = None

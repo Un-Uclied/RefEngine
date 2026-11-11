@@ -16,8 +16,8 @@ class SongManager:
 
         if sounds is None:
             sounds = (
-                arcade.load_sound(str(assets.path(song_data["inst_path"]))),
-                arcade.load_sound(str(assets.path(song_data["voices_path"]))),
+                arcade.load_sound(str(assets.path(song_data["inst"]))),
+                arcade.load_sound(str(assets.path(song_data["voices"]))),
             )
         self._inst_sound, self._voices_sound = sounds
 

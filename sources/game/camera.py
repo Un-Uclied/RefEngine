@@ -1,10 +1,6 @@
 import arcade
 from .events import on_beat, on_note_pressed, on_opponent_pressed
 
-BEAT_UI_CAMERA_ADD_ZOOM = 0.1
-BEAT_NOTE_CAMERA_ADD_ZOOM = 0.15
-BEAT_WORLD_CAMERA_ADD_ZOOM = 0.15
-
 class CameraManager:
     """Control world, note and HUD cameras during beats and note hits.
 
@@ -23,8 +19,7 @@ class CameraManager:
         self.camera_note = arcade.Camera2D()
         self.camera_ui = arcade.Camera2D()
 
-        self._spawn_camera_world_zoom = background_data["default_zoom"]
-        self.camera_world.zoom = self._spawn_camera_world_zoom
+        self.camera_world.zoom = background_data["default_zoom"]
 
         self._camera_target_position = arcade.Vec2()
         self._camera_position = arcade.Vec2()
@@ -58,16 +53,8 @@ class CameraManager:
 
         self._camera_target_position = character_mgr.player.camera_position if song_mgr.is_player_turn else character_mgr.opponent.camera_position
 
-        self.camera_ui.zoom = 1 + BEAT_UI_CAMERA_ADD_ZOOM
-        self.camera_note.zoom = 1 + BEAT_NOTE_CAMERA_ADD_ZOOM
-        self.camera_world.zoom = self._spawn_camera_world_zoom + BEAT_WORLD_CAMERA_ADD_ZOOM
-
     def update(self, delta_time):
         self._camera_position = self._camera_position.lerp(
             self._camera_target_position,
             delta_time * 5)
         self.camera_world.position = self._camera_position + self.shake_offset
-    
-        self.camera_world.zoom = min(arcade.math.lerp(self.camera_world.zoom, self._spawn_camera_world_zoom, delta_time), self._spawn_camera_world_zoom + BEAT_WORLD_CAMERA_ADD_ZOOM)
-        self.camera_note.zoom = min(arcade.math.lerp(self.camera_note.zoom, 1, delta_time), 1 + BEAT_NOTE_CAMERA_ADD_ZOOM)
-        self.camera_ui.zoom = min(arcade.math.lerp(self.camera_ui.zoom, 1, delta_time * 10), 1 + BEAT_UI_CAMERA_ADD_ZOOM)

@@ -10,6 +10,7 @@
 mods/demo/assets/
 ├─ songs/track/
 │  ├─ data.json
+│  ├─ chart.json
 │  ├─ Inst.ogg
 │  └─ Voices.ogg
 ├─ notes/my_note/data.json
@@ -25,33 +26,40 @@ mods/demo/assets/
 
 ## 2. 곡 데이터와 차트
 
-기존 곡의 `data.json`을 복사하면 전체 차트 구조를 확인하기 쉽습니다. 아래는 기본 캐릭터·배경·리셉터·스플래시를 재사용하는 작은 예시입니다.
+곡 정보는 `data.json`, 박자·속도·노트는 지정한 `chart.json`에 둡니다. [곡 템플릿](../assets/songs/README.md)을 참고하세요. 예시:
+
+`data.json`:
 
 ```json
 {
   "name": "track",
+  "description": "My song",
+  "inst": "assets/songs/track/Inst.ogg",
+  "voices": "assets/songs/track/Voices.ogg",
+  "chart": "assets/songs/track/chart.json",
   "player_name": "null",
   "opponent_name": "crovan",
   "sub_character_name": null,
   "background": "crovan_stage",
   "receptor_name": "default",
   "splash_name": "default",
-  "inst_path": "assets/songs/track/Inst.ogg",
-  "voices_path": "assets/songs/track/Voices.ogg",
+  "scripts": ["beat_zoom", "my_song"],
+  "shaders": []
+}
+
+```
+
+`chart.json`:
+
+```json
+{
   "bpm": 120,
   "speed": 1.6,
-  "scripts": ["my_song"],
-  "notes": [
-    {
-      "lengthInSteps": 16,
-      "mustHitSection": true,
-      "sectionNotes": [
-        [500, 0, 0],
-        [1000, 1, 0],
-        [1500, 2, 0, "my_note"]
-      ]
-    }
-  ]
+  "notes": [{
+    "lengthInSteps": 16,
+    "mustHitSection": true,
+    "sectionNotes": [[500, 0, 0], [1000, 1, 0], [1500, 2, 0, "my_note"]]
+  }]
 }
 ```
 
@@ -110,7 +118,7 @@ class SongScript:
         self.game.camera_mgr.shake_offset = arcade.Vec2()
 ```
 
-`game`에서 `assets`, `song_mgr`, `note_mgr`, `character_mgr`, `receptor_mgr`, `camera_mgr`, `score_mgr`, `background_mgr`, `splash_mgr`, `game_interface_mgr`에 접근할 수 있습니다. 각 매니저의 한영 docstring에 단위와 스크립트용 필드가 설명되어 있습니다. `if TYPE_CHECKING:` 안에서 타입을 가져오면 실행 중 순환 import 없이 에디터 자동완성을 사용할 수 있습니다. 다른 곡에도 적용할 수 있는 예시는 `assets/scripts/alt_camera.py`와 `opponent_float.py`입니다.
+`game`에서 `assets`, `song_mgr`, `note_mgr`, `character_mgr`, `receptor_mgr`, `camera_mgr`, `shader_mgr`, `score_mgr`, `background_mgr`, `splash_mgr`, `game_interface_mgr`에 접근할 수 있습니다. 각 매니저의 한영 docstring에 단위와 스크립트용 필드가 설명되어 있습니다. `if TYPE_CHECKING:` 안에서 타입을 가져오면 실행 중 순환 import 없이 에디터 자동완성을 사용할 수 있습니다. 다른 곡에도 적용할 수 있는 예시는 `assets/scripts/alt_camera.py`, `opponent_float.py`, `beat_zoom.py`입니다. 기본 곡은 모두 `beat_zoom`을 사용하며 모드 곡도 `scripts` 배열에 추가하면 같은 박자 확대 효과를 쓸 수 있습니다.
 
 이벤트 신호는 `sources/game/events.py`에 있습니다. 수신 함수는 `(sender, **event_values)` 형태이며, 직접 연결했다면 `on_hide()`에서 해제하세요.
 
@@ -134,17 +142,22 @@ SICK 스플래시를 교체하려면 곡의 `splash_name`을 설정하고 `asset
 
 ## 6. 전체 화면 셰이더
 
-곡의 `data.json`에 순서가 있는 `shaders` 배열을 넣습니다. 이 필드가 없는 곡에는 효과가 적용되지 않습니다. Singularity의 설정은 다음과 같습니다.
+곡의 `data.json`에 순서가 있는 `shaders` 배열을 넣습니다. 이 필드가 없는 곡에는 효과가 적용되지 않습니다. Singularity는 다음 여섯 효과를 사용합니다.
 
 ```json
 "shaders": [
-  {"name": "chromatic_aberration", "uniforms": {"strength": 0.003}},
-  {"name": "vignette", "uniforms": {"strength": 0.55, "radius": 0.75, "softness": 0.4}},
-  {"name": "lens_distortion", "uniforms": {"strength": 0.12}}
+  {"name": "chromatic_aberration", "uniforms": {"strength": 0.01}},
+  {"name": "vignette", "uniforms": {"strength": 0.75, "radius": 0.65, "softness": 0.4}},
+  {"name": "lens_distortion", "uniforms": {"strength": 0.05}},
+  {"name": "vhs", "uniforms": {"scanline_strength": 0.22, "noise_strength": 0.035, "jitter_strength": 0.002}},
+  {"name": "bloom", "uniforms": {"strength": 0.55, "threshold": 0.68, "radius": 5.0}},
+  {"name": "seasick", "uniforms": {"strength": 0.009, "waves": 5.0, "speed": 2.0, "cycle_speed": 1.4}}
 ]
 ```
 
-이름마다 `assets/shaders/<이름>.frag`를 읽습니다. `mods/demo/assets/shaders/`에 같은 이름의 파일을 두면 기본 셰이더를 덮어씁니다. 새 효과는 `.frag` 파일을 만들고 곡의 배열에 이름을 추가하면 됩니다. 엔진은 GLSL 330의 `in vec2 uv`(화면 좌표 0–1)를 전달하고, 이전 단계의 화면을 텍스처 유닛 0의 `uniform sampler2D u_texture`에 연결합니다. `out vec4 fragColor`를 선언해 출력 색을 기록하세요. 수치 매개변수는 GLSL uniform과 같은 이름으로 `uniforms`에 지정합니다. 효과는 배열 순서대로 배경·캐릭터·HUD·노트 전체에 적용되며, 화면 전환 페이드는 그 뒤에 그려집니다.
+이름마다 `assets/shaders/<이름>.frag`를 읽습니다. `mods/demo/assets/shaders/`에 같은 이름의 파일을 두면 기본 셰이더를 덮어씁니다. 새 효과는 `.frag` 파일을 만들고 곡의 배열에 이름을 추가하면 됩니다. 엔진은 GLSL 330의 `in vec2 uv`(화면 좌표 0–1)를 전달하고, 이전 단계의 화면을 텍스처 유닛 0의 `uniform sampler2D u_texture`에 연결합니다. `out vec4 fragColor`를 선언해 출력 색을 기록하세요. 수치 매개변수는 GLSL uniform과 같은 이름으로 `uniforms`에 지정합니다. 선택적으로 `u_time`(곡 재생 시간, 초)과 `u_resolution`(프레임버퍼 크기, 픽셀)을 선언할 수 있습니다. 이 세 `u_*` 값은 엔진이 관리합니다. 효과는 배열 순서대로 배경·캐릭터·HUD·노트 전체에 적용되며, 화면 전환 페이드는 그 뒤에 그려집니다.
+
+재생 중 SongScript나 NoteScript에서 `game.shader_mgr.set_uniform("lens_distortion", "strength", 0.2)`로 값을 즉시 바꿀 수 있습니다. 현재 값은 `game.shader_mgr.get_uniform("lens_distortion", "strength")`로 읽습니다. 같은 이름의 셰이더를 여러 번 사용했다면 모두 함께 변경됩니다. `shaders` 필드가 없는 곡의 `shader_mgr`는 `None`입니다. VHS의 매개변수는 줄무늬 어두움·노이즈·가로 흔들림이고, 블룸은 번짐 강도·밝기 임계값(0–1)·샘플 반경(픽셀), 멀미 효과는 가로 왜곡 강도(UV 단위)·물결 개수·이동 속도·왜곡 강약 주기 속도입니다.
 
 ## 7. 모드 확인
 

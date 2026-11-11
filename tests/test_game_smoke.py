@@ -1,5 +1,6 @@
 """Run from the project root: python -B -m unittest discover -s tests -v."""
 import unittest
+import math
 from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
@@ -31,6 +32,56 @@ class GameSmokeTest(unittest.TestCase):
         shaders.finish()
         image = arcade.get_image()
         self.assertGreater(image.getpixel((32, 32))[0], image.getpixel((2, 2))[0] + 100)
+        shaders.set_uniform("vignette", "strength", 0.0)
+        self.assertAlmostEqual(shaders.get_uniform("vignette", "strength"), 0.0)
+        shaders.begin()
+        arcade.draw_lbwh_rectangle_filled(0, 0, 64, 64, arcade.color.RED)
+        shaders.finish()
+        self.assertGreater(arcade.get_image().getpixel((2, 2))[0], image.getpixel((2, 2))[0] + 100)
+
+    def test_bloom_spreads_bright_pixels(self):
+        window = arcade.Window(64, 64, visible=False)
+        self.addCleanup(window.close)
+        shaders = PostProcessManager(
+            [{"name": "bloom", "uniforms": {
+                "strength": 1.0, "threshold": 0.5, "radius": 6.0,
+            }}], AssetStore(),
+        )
+        self.addCleanup(shaders.on_hide_view)
+        shaders.begin()
+        arcade.draw_lbwh_rectangle_filled(28, 28, 8, 8, arcade.color.WHITE)
+        shaders.finish()
+        self.assertGreater(arcade.get_image().getpixel((40, 32))[0], 0)
+
+    def test_vhs_scanlines_and_seasick_motion(self):
+        window = arcade.Window(64, 64, visible=False)
+        self.addCleanup(window.close)
+        vhs = PostProcessManager(
+            [{"name": "vhs", "uniforms": {
+                "scanline_strength": 1.0, "noise_strength": 0.0, "jitter_strength": 0.0,
+            }}], AssetStore(),
+        )
+        self.addCleanup(vhs.on_hide_view)
+        vhs.begin()
+        arcade.draw_lbwh_rectangle_filled(0, 0, 64, 64, arcade.color.WHITE)
+        vhs.finish()
+        image = arcade.get_image()
+        self.assertGreater(abs(image.getpixel((32, 32))[0] - image.getpixel((32, 33))[0]), 100)
+
+        seasick = PostProcessManager(
+            [{"name": "seasick", "uniforms": {
+                "strength": 0.1, "waves": 2.0, "speed": 0.0, "cycle_speed": 1.0,
+            }}], AssetStore(),
+        )
+        self.addCleanup(seasick.on_hide_view)
+        images = []
+        for time_seconds in (0.0, math.pi / 2):
+            seasick.begin()
+            arcade.draw_lbwh_rectangle_filled(0, 0, 32, 64, arcade.color.RED)
+            arcade.draw_lbwh_rectangle_filled(32, 0, 32, 64, arcade.color.BLUE)
+            seasick.finish(time_seconds)
+            images.append(arcade.get_image().convert("RGB"))
+        self.assertIsNotNone(ImageChops.difference(*images).getbbox())
 
     def test_resume_keeps_volume_and_song_position(self):
         song = SongManager.__new__(SongManager)
@@ -54,13 +105,16 @@ class GameSmokeTest(unittest.TestCase):
         self.addCleanup(window.close)
         self.addCleanup(setattr, MainGameView, "current", None)
         arcade.enable_timings()
-        arcade.load_font("assets/fonts/Paperlogy-8ExtraBold.ttf")
+        arcade.load_font("assets/fonts/SeoulAlrimTTF-Heavy.ttf")
         view = MainGameView("singularity")
         player = SimpleNamespace(time=0, source=SimpleNamespace(duration=240))
         voices = SimpleNamespace()
         with patch("arcade.play_sound", side_effect=(player, voices)):
             window.show_view(view)
-        self.assertEqual(len(view.shader_mgr.effects), 3)
+        self.assertEqual(len(view.shader_mgr.effects), len(view._song_data["shaders"]))
+        self.assertTrue({"vhs", "bloom", "seasick"}.issubset(
+            {effect["name"] for effect in view._song_data["shaders"]}
+        ))
         with_effects = arcade.get_image().convert("RGB").crop((100, 100, 1180, 620))
         shaders = view.shader_mgr
         view.shader_mgr = None
@@ -84,7 +138,7 @@ class GameSmokeTest(unittest.TestCase):
             view.on_key_press(arcade.key.NUM_ADD, 0)
         self.assertEqual(view.song_mgr.volume_percent, 100)
         view.note_mgr.is_bot_play = False
-        self.assertEqual(len(view.song_scripts), 2)
+        self.assertEqual(len(view.song_scripts), len(view._song_data["scripts"]))
         self.assertTrue(any(
             note["penalty_note"] for note in view.note_mgr.chart_data
             if note["note_type"] == "flame_note"
