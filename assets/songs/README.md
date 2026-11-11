@@ -28,6 +28,7 @@ Place `data.json` and `chart.json` in `assets/songs/<song_id>/`, or the same pat
 {
   "bpm": 120,
   "speed": 1.6,
+  "events": [],
   "notes": [
     {
       "lengthInSteps": 16,
@@ -39,3 +40,5 @@ Place `data.json` and `chart.json` in `assets/songs/<song_id>/`, or the same pat
 ```
 
 Change `track` in asset paths to your song folder name. `sub_character_name` may be `null`. Scripts and shaders may be empty lists. / 애셋 경로의 `track`은 실제 곡 폴더 이름으로 바꾸세요. 보조 캐릭터는 `null`, 스크립트와 셰이더는 빈 배열로 둘 수 있습니다.
+
+Optional `events` entries run [EventScript](../scripts/events/README.md) at a song timestamp. / 선택적인 `events` 배열로 곡의 지정 시각에 커스텀 스크립트를 실행합니다. [차트 에디터](../../docs/chart-editor.md)에서 추가할 수 있습니다.

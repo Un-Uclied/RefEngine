@@ -73,7 +73,7 @@ class MenuView(arcade.View):
         super().__init__()
         self.songs = available_songs()
         self.selected = next((i for i, song in enumerate(self.songs) if song[0] == initial_song), 0)
-        self.title = arcade.Text("REFENGINE / SONG SELECT", 100, 610, arcade.color.WHITE, 28, font_name=FONT_NAME)
+        self.title = arcade.Text("REFENGINE / SONG SELECT", 100, 610, arcade.color.WHITE, 28, font_name=FONT_NAME, bold=True)
         self.hint = arcade.Text("UP / DOWN  SELECT     ENTER  START", 100, 570, arcade.color.LIGHT_GRAY, 16, font_name=FONT_NAME)
         self.start_text = arcade.Text("START", 990, 90, arcade.color.WHITE, 22, font_name=FONT_NAME, anchor_x="center", anchor_y="center")
 
@@ -126,7 +126,7 @@ class LoadingView(arcade.View):
         self._steps = None
         self._game = None
         self._fade = 0.0
-        self.title = arcade.Text(f"LOADING  {song_id}", 100, 400, arcade.color.WHITE, 28, font_name=FONT_NAME)
+        self.title = arcade.Text(f"LOADING  {song_id}", 100, 400, arcade.color.WHITE, 28, font_name=FONT_NAME, bold=True)
         self.status_text = arcade.Text("Starting", 100, 340, arcade.color.LIGHT_GRAY, 16, font_name=FONT_NAME)
 
     def on_show_view(self):
@@ -147,7 +147,7 @@ class LoadingView(arcade.View):
             if hasattr(script, "on_hide"):
                 script.on_hide()
         for name in ("note_mgr", "character_mgr", "receptor_mgr", "splash_mgr",
-                     "score_mgr", "camera_mgr", "game_interface_mgr", "shader_mgr"):
+                     "score_mgr", "camera_mgr", "game_interface_mgr", "shader_mgr", "event_mgr"):
             manager = getattr(self._game, name, None)
             if manager is not None:
                 manager.on_hide_view()

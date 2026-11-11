@@ -161,6 +161,8 @@ SICK 스플래시를 교체하려면 곡의 `splash_name`을 설정하고 `asset
 
 ## 7. 모드 확인
 
+플레이 중 **7**로 [차트 에디터](../docs/chart-editor.md)를 엽니다. 차트의 선택적 `events` 배열은 `assets/scripts/events/` 또는 모드의 같은 경로에 있는 [EventScript](../assets/scripts/events/README.md)를 실행합니다. **Esc**로 일시 정지할 수 있으며 일시 정지 메뉴와 FPS는 후처리 뒤에 그립니다.
+
 1. `python run.py demo:track`을 실행해 메뉴에 곡이 선택되는지 확인합니다.
 2. **START**를 누릅니다. 로딩 오류가 뜨면 메시지를 확인하고 `Esc`로 돌아갑니다.
 3. JSON의 모든 애셋 경로가 모드나 기본 애셋에 실제로 있는지 확인합니다. 스크립트·노트 종류 이름은 단일 이름이어야 합니다.

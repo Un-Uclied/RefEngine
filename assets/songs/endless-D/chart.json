@@ -7916,5 +7916,52 @@
       "changeBPM": false,
       "mustHitSection": true
     }
+  ],
+  "events": [
+    {
+      "time": 0.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.01
+      }
+    },
+    {
+      "time": 170.45454545454547,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 340.90909090909093,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.01
+      }
+    },
+    {
+      "time": 511.3636363636364,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 681.8181818181819,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.01
+      }
+    }
   ]
 }

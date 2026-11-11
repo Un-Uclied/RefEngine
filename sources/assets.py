@@ -89,7 +89,8 @@ class AssetStore:
         """
         data = self.json(f"songs/{name}/data.json")
         chart = self.json(data["chart"])
-        return {**data, **{key: chart[key] for key in ("bpm", "speed", "notes")}}
+        return {**data, **{key: chart[key] for key in ("bpm", "speed", "notes")},
+                "events": chart.get("events", [])}
 
     def image(self, name):
         """Return a cached Texture or TextureAnimation for a PNG or GIF.

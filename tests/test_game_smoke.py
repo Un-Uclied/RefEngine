@@ -107,14 +107,31 @@ class GameSmokeTest(unittest.TestCase):
         arcade.enable_timings()
         arcade.load_font("assets/fonts/SeoulAlrimTTF-Heavy.ttf")
         view = MainGameView("singularity")
-        player = SimpleNamespace(time=0, source=SimpleNamespace(duration=240))
-        voices = SimpleNamespace()
+        player = SimpleNamespace(time=0, source=SimpleNamespace(duration=240), seek=Mock())
+        voices = SimpleNamespace(seek=Mock())
         with patch("arcade.play_sound", side_effect=(player, voices)):
             window.show_view(view)
+        with patch("arcade.stop_sound"), patch("arcade.play_sound", side_effect=(player, voices, player, voices)):
+            view.on_key_press(arcade.key.ESCAPE, 0)
+            self.assertTrue(view.paused)
+            view.on_draw()
+            view.on_key_press(arcade.key.DOWN, 0)
+            view.on_key_press(arcade.key.DOWN, 0)
+            view.on_key_press(arcade.key.ENTER, 0)
+            self.assertTrue(view.note_mgr.is_bot_play)
+            view.on_key_press(arcade.key.ENTER, 0)
+            view.on_key_press(arcade.key.ESCAPE, 0)
+            self.assertFalse(view.paused)
+            view.on_key_press(arcade.key.KEY_7, 0)
+            self.assertIsNotNone(view.editor)
+            view.on_draw()
+            with patch.object(view, "restart") as restart:
+                view.on_key_press(arcade.key.ESCAPE, 0)
+                restart.assert_called_once()
+            view.editor = None
+            view.toggle_pause()
+            view.on_draw()
         self.assertEqual(len(view.shader_mgr.effects), len(view._song_data["shaders"]))
-        self.assertTrue({"vhs", "bloom", "seasick"}.issubset(
-            {effect["name"] for effect in view._song_data["shaders"]}
-        ))
         with_effects = arcade.get_image().convert("RGB").crop((100, 100, 1180, 620))
         shaders = view.shader_mgr
         view.shader_mgr = None
@@ -162,6 +179,7 @@ class GameSmokeTest(unittest.TestCase):
         )
         player.time = first_hold["strum_time"] / 1000
         view.on_update(1 / 60)
+        view.splash_mgr.sprites.clear()
         previous_score = view.score_mgr.score
         key = (arcade.key.D, arcade.key.F, arcade.key.J, arcade.key.K)[
             first_hold["direction_index"]
@@ -178,6 +196,12 @@ class GameSmokeTest(unittest.TestCase):
         self.assertEqual(len(view.splash_mgr.sprites), 1)
         view.splash_mgr._note_pressed(None, first_hold["direction_index"], SimpleNamespace(judgement="sick"))
         self.assertIs(view.splash_mgr.sprites[1].animation, view.splash_mgr.animations[(color, 2)])
+        for lane in (0, 4):
+            view.splash_mgr._note_pressed(None, lane, SimpleNamespace(judgement="auto"))
+            self.assertEqual(view.splash_mgr.sprites[-1].position, view.receptor_mgr.receptors[lane].position)
+        self.assertEqual(len(view.splash_mgr.sprites), 4)
+        for index, receptor in enumerate(view.receptor_mgr.receptors):
+            self.assertEqual(tuple(receptor.color)[:3], (180, 180, 180) if index >= 4 else (255, 255, 255))
         judgement = view.game_interface_mgr._judgement._judgement_sprite
         self.assertEqual(judgement.center_x, window.width / 2)
         self.assertLess(judgement.width, 350)

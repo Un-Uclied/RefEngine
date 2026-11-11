@@ -116,6 +116,8 @@ class Receptor(arcade.Sprite):
 
         self.position = self._loaded_settings["position"]
         self.scale = self._loaded_settings["scale"]
+        if direction_index >= 4:
+            self.color = (180, 180, 180)
         self.alpha = self._loaded_settings["alpha"]
         self.set_animation("idle")
         self.spawn_x, self.spawn_y = self.center_x, self.center_y

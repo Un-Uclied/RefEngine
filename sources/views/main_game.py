@@ -5,6 +5,8 @@ from sources.game import *
 from sources.game.post_process import PostProcessManager
 from sources.fonts import FONT_NAME
 from sources.assets import AssetStore
+from sources.game.chart_events import ChartEventManager
+from .system_ui import SystemUI
 
 class MainGameView(arcade.View):
     """Active song view and entry point for SongScript and NoteScript ``game``.
@@ -20,6 +22,12 @@ class MainGameView(arcade.View):
 
     def __init__(self, song_name, prepared=None):
         super().__init__()
+        self.song_id = song_name
+        self.paused = False
+        self.pause_selection = 0
+        self.editor = None
+        self._paused_releases = set()
+        self.system_ui = SystemUI(self)
         self.character_mgr: SingerCharacterManager
         self.receptor_mgr: ReceptorManager
         self.note_mgr: NoteManager
@@ -92,9 +100,12 @@ class MainGameView(arcade.View):
             script = runpy.run_path(str(self.assets.path(f"scripts/{script_name}.py")))["SongScript"]
             self.song_scripts.append(script(self))
         yield "Scripts"
+        self.event_mgr = ChartEventManager(self, self._song_data.get("events", []))
+        yield "Events"
     
     def on_hide_view(self):
         self.song_mgr.stop()
+        self.event_mgr.on_hide_view()
         for script in reversed(self.song_scripts):
             if hasattr(script, "on_hide"):
                 script.on_hide()
@@ -112,12 +123,18 @@ class MainGameView(arcade.View):
         return super().on_hide_view()
 
     def on_update(self, delta_time):
+        if self.editor is not None:
+            self.editor.update()
+            return
+        if self.paused:
+            return
         if self._fade_alpha:
             self._fade_alpha = max(0, self._fade_alpha - delta_time * 850)
             if not self._fade_alpha:
                 self.song_mgr.play()
             return
         self.song_mgr.update()
+        self.event_mgr.update(delta_time)
         self.note_mgr.update(delta_time)
         self.splash_mgr.update(delta_time)
         self.receptor_mgr.update(delta_time)
@@ -129,6 +146,10 @@ class MainGameView(arcade.View):
         self.game_interface_mgr.update(delta_time)
 
     def on_draw(self):
+        if self.editor is not None:
+            with self.system_ui.camera.activate():
+                self.editor.draw()
+            return
         if self.shader_mgr is not None and self.shader_mgr.effects:
             self.shader_mgr.begin()
         else:
@@ -144,14 +165,55 @@ class MainGameView(arcade.View):
             self.note_mgr.draw()
             self.splash_mgr.draw()
         
-        arcade.draw_text(f"FPS : {math.floor(arcade.get_fps())}", 20, arcade.get_window().height - 20, arcade.color.GREEN, 24, bold=False, font_name=FONT_NAME)
         if self.shader_mgr is not None and self.shader_mgr.effects:
             self.shader_mgr.finish(self.song_mgr.song_ms / 1000)
         if self._fade_alpha:
             window = arcade.get_window()
             arcade.draw_lbwh_rectangle_filled(0, 0, window.width, window.height, (0, 0, 0, int(self._fade_alpha)))
+        self.system_ui.draw()
+
+    def restart(self):
+        from .menu import LoadingView
+        self.window.show_view(LoadingView(self.song_id))
+
+    def toggle_pause(self):
+        self.paused = not self.paused
+        if self.paused:
+            self.song_mgr.pause()
+            self.pause_selection = 0
+        else:
+            self.song_mgr.resume()
+            for key in self._paused_releases:
+                self.on_key_release(key, 0)
+            self._paused_releases.clear()
 
     def on_key_press(self, key, modifiers):
+        if self.editor is not None:
+            self.editor.key(key, modifiers)
+            return
+        if key == arcade.key.KEY_7 and not self._fade_alpha:
+            from .chart_editor import ChartEditor
+            if not self.paused:
+                self.toggle_pause()
+            self.editor = ChartEditor(self)
+            return
+        if key == arcade.key.ESCAPE and not self._fade_alpha:
+            self.toggle_pause()
+            return
+        if self.paused:
+            if key in (arcade.key.UP, arcade.key.DOWN):
+                self.pause_selection = (self.pause_selection + (1 if key == arcade.key.DOWN else -1)) % 4
+            elif key == arcade.key.ENTER:
+                if self.pause_selection == 0:
+                    self.toggle_pause()
+                elif self.pause_selection == 1:
+                    self.restart()
+                elif self.pause_selection == 2:
+                    self.note_mgr.is_bot_play = not self.note_mgr.is_bot_play
+                else:
+                    from .menu import MenuView
+                    self.window.show_view(MenuView(self.song_id))
+            return
         if key in (arcade.key.MINUS, arcade.key.NUM_SUBTRACT):
             self.song_mgr.change_volume(-10)
             return
@@ -170,6 +232,9 @@ class MainGameView(arcade.View):
             self.note_mgr.on_key_press(idx)
 
     def on_key_release(self, key, modifiers):
+        if self.editor is not None or self.paused:
+            self._paused_releases.add(key)
+            return
         if self.note_mgr.is_bot_play:
             return
         keys_arrow = {arcade.key.LEFT: 0, arcade.key.DOWN: 1, arcade.key.UP: 2, arcade.key.RIGHT: 3}
@@ -180,3 +245,15 @@ class MainGameView(arcade.View):
         if key in keys_lane:
             idx = keys_lane[key]
             self.note_mgr.on_key_release(idx)
+
+    def on_text(self, text):
+        if self.editor is not None:
+            self.editor.text(text)
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        if self.editor is not None:
+            self.editor.click(x, y, button)
+
+    def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
+        if self.editor is not None:
+            self.editor.key(arcade.key.PAGEUP if scroll_y > 0 else arcade.key.PAGEDOWN, 0)

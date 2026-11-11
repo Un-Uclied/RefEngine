@@ -41,6 +41,8 @@ class SongManager:
 
         현재 반주 재생 위치(밀리초)입니다. 재생 전에는 0입니다.
         """
+        if self._paused:
+            return self._pause_time
         if not self.inst_player:
             return 0
         return self.inst_player.time * 1000

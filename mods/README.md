@@ -161,6 +161,8 @@ During play, a `SongScript` or `NoteScript` can change a value without recompili
 
 ## 7. Check your mod
 
+Press **7** during gameplay for the [chart editor](../docs/chart-editor.md). Optional chart `events` trigger [EventScript](../assets/scripts/events/README.md) from `assets/scripts/events/` or a mod override. Pause with **Esc**; pause menus and the FPS display are rendered after postprocessing.
+
 1. Run `python run.py demo:track` and confirm the menu selects your song.
 2. Press **START**. If loading fails, read the error on screen, then press `Esc`.
 3. Check that every JSON asset path resolves inside your mod or the built-in assets. Script and note type names must be single names.

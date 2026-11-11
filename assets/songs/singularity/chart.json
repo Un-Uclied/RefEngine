@@ -42061,5 +42061,124 @@
       "changeBPM": false,
       "mustHitSection": true
     }
+  ],
+  "events": [
+    {
+      "time": 0.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 75.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 150.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 225.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 300.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 375.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 525.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 450.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 600.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 675.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 750.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    },
+    {
+      "time": 825.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.0
+      }
+    },
+    {
+      "time": 900.0,
+      "script": "shader_value",
+      "params": {
+        "shader": "lens_distortion",
+        "uniform": "strength",
+        "value": 0.05
+      }
+    }
   ]
 }

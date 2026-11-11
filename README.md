@@ -62,6 +62,10 @@ mods/demo/assets/
 
 ## 개발
 
+플레이 중 `Esc`로 일시 정지 메뉴, `7`로 [차트 에디터](docs/chart-editor.md)를 엽니다. 시스템 UI는 셰이더 영향을 받지 않습니다. FPS는 오른쪽 위에 표시되며 목표 FPS의 85% 미만은 주황색, 60% 미만은 빨간색입니다. 제목·판정에는 Heavy, 설명·수치에는 Medium 폰트를 사용합니다.
+
+차트의 `events` 배열로 [EventScript](assets/scripts/events/README.md)를 실행할 수 있습니다.
+
 변경 후 전체 테스트를 실행합니다.
 
 ```powershell

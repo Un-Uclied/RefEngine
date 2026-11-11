@@ -14,7 +14,7 @@
     "beat_zoom",
     "alt_camera",
     "opponent_float",
-    "window_wiggle"
+    "receptor_shuffle"
   ],
   "shaders": [
     {
@@ -51,15 +51,6 @@
         "strength": 0.55,
         "threshold": 0.68,
         "radius": 5.0
-      }
-    },
-    {
-      "name": "seasick",
-      "uniforms": {
-        "strength": 0.009,
-        "waves": 5.0,
-        "speed": 2.0,
-        "cycle_speed": 1.4
       }
     }
   ]

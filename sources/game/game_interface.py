@@ -23,7 +23,7 @@ class TimebarInterface:
         self._time_bar_fg = arcade.SpriteSolidColor(BAR_WIDTH-2, BAR_HEIGHT-2, arcade.get_window().width/2, arcade.get_window().height - BAR_Y, arcade.color.WHITE)
         
         self._time_bar_name_text = arcade.Text(f"< {song_name} >", arcade.get_window().width/2, arcade.get_window().height - NAME_Y,
-                                            arcade.color.WHITE, NAME_FONT_SIZE, font_name=FONT_NAME, align="center", anchor_x="center", anchor_y="center")
+                                            arcade.color.WHITE, NAME_FONT_SIZE, font_name=FONT_NAME, bold=True, align="center", anchor_x="center", anchor_y="center")
         self._time_bar_time_text = arcade.Text("| 0:00 |", arcade.get_window().width/2, arcade.get_window().height - TIME_Y,
                                             arcade.color.WHITE, TIME_FONT_SIZE, font_name=FONT_NAME, align="center", anchor_x="center", anchor_y="center")
 

@@ -8,7 +8,7 @@ from xml.etree import ElementTree
 import arcade
 from PIL import Image
 
-from .events import on_note_pressed
+from .events import on_note_pressed, on_opponent_pressed
 
 
 FRAME_MS = 50
@@ -17,12 +17,12 @@ FRAME_NAME = re.compile(r"note splash (blue|green|purple|red) ([12])000([0-3])$"
 
 
 class SplashManager:
-    """Show a note splash at the matching receptor after a SICK hit.
+    """Show a note splash at the matching receptor after a SICK or AUTO hit.
 
     ``sprites`` contains active splashes. ``animations`` maps
     ``(color, variant)`` to a four-frame animation loaded from the XML atlas.
 
-    SICK 판정 시 해당 리셉터에 노트 스플래시를 표시합니다.
+    SICK 또는 AUTO 판정 시 양쪽 리셉터에 노트 스플래시를 표시합니다.
     ``sprites``는 활성 스플래시 목록이고 ``animations``는 XML 아틀라스에서
     읽은 4프레임 애니메이션을 ``(색상, 변형 번호)``로 찾는 매핑입니다.
     """
@@ -73,19 +73,21 @@ class SplashManager:
                     self.animations[(color, variant)] = arcade.TextureAnimation(keyframes)
 
         self.sprites = arcade.SpriteList()
-        self._next_variant = [1] * 4
+        self._next_variant = [1] * 8
         on_note_pressed.connect(self._note_pressed)
+        on_opponent_pressed.connect(self._note_pressed)
 
     def on_hide_view(self):
         on_note_pressed.disconnect(self._note_pressed)
+        on_opponent_pressed.disconnect(self._note_pressed)
 
     def _note_pressed(self, sender, direction_index, note):
-        if note is None or note.judgement != "sick":
+        if note is None or note.judgement not in ("sick", "auto"):
             return
         lane = direction_index % 4
         receptor = self.game_context.receptor_mgr.receptors[direction_index]
-        variant = self._next_variant[lane]
-        self._next_variant[lane] = 3 - variant
+        variant = self._next_variant[direction_index]
+        self._next_variant[direction_index] = 3 - variant
         sprite = arcade.TextureAnimationSprite(
             receptor.center_x, receptor.center_y, receptor.scale_x,
             self.animations[(LANE_COLORS[lane], variant)],
